@@ -22,12 +22,6 @@
         <header class="header">
             <h1>🏆 75 Soft: Redemption Edition</h1>
             <p class="subtitle">¡El que más puntos tenga gana $500! 💪</p>
-            
-            <!-- Data Source Indicator -->
-            <div class="data-source-indicator" id="dataSourceIndicator">
-                <span class="indicator-dot"></span>
-                <span class="indicator-text">Mock Data</span>
-            </div>
         </header>
 
         <!-- Tab Navigation -->
@@ -36,7 +30,6 @@
             <button class="tab-button" data-tab="daily">📝 Registro Diario</button>
             <button class="tab-button" data-tab="analytics">📈 Análisis</button>
             <button class="tab-button" data-tab="history">📜 Historial</button>
-            <button class="tab-button" data-tab="settings">⚙️ Configuración</button>
         </nav>
 
         <!-- Dashboard Tab -->
@@ -230,62 +223,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Settings Tab -->
-        <div id="settings" class="tab-content">
-            <div class="settings-container card">
-                <h2 class="section-title">⚙️ Configuración</h2>
-                
-                <div class="settings-section">
-                    <h3>🔌 Fuente de Datos</h3>
-                    <div class="settings-option">
-                        <label class="switch">
-                            <input type="checkbox" id="useFirebase">
-                            <span class="slider"></span>
-                        </label>
-                        <span>Usar Firebase (desactivado = Mock Data)</span>
-                    </div>
-                    <p class="settings-note">
-                        Mock Data es útil para pruebas sin conexión a internet.
-                    </p>
-                </div>
-
-                <div class="settings-section">
-                    <h3>🔑 Configuración Firebase</h3>
-                    <div class="firebase-config">
-                        <div class="config-field">
-                            <label>API Key:</label>
-                            <input type="text" id="firebaseApiKey" placeholder="Tu API Key de Firebase">
-                        </div>
-                        <div class="config-field">
-                            <label>Auth Domain:</label>
-                            <input type="text" id="firebaseAuthDomain" placeholder="tu-app.firebaseapp.com">
-                        </div>
-                        <div class="config-field">
-                            <label>Project ID:</label>
-                            <input type="text" id="firebaseProjectId" placeholder="tu-project-id">
-                        </div>
-                        <button class="save-config-button" id="saveFirebaseConfig">
-                            💾 Guardar Configuración
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3>🎮 Acciones</h3>
-                    <button class="action-button danger" id="resetAllData">
-                        🗑️ Resetear Todos los Datos
-                    </button>
-                    <button class="action-button" id="backupData">
-                        💾 Hacer Backup Local
-                    </button>
-                    <button class="action-button" id="restoreData">
-                        📂 Restaurar desde Backup
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>

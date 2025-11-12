@@ -1,16 +1,17 @@
 // ===== App Configuration =====
 const AppConfig = {
     // Toggle between mock data and Firebase
-    USE_MOCK_DATA: true, // Set to false to use Firebase
+    USE_MOCK_DATA: false, // Set to false to use Firebase
     
     // Firebase configuration
     FIREBASE_CONFIG: {
-        apiKey: "YOUR_API_KEY_HERE",
-        authDomain: "YOUR_AUTH_DOMAIN_HERE",
-        projectId: "YOUR_PROJECT_ID_HERE",
-        storageBucket: "YOUR_STORAGE_BUCKET_HERE",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-        appId: "YOUR_APP_ID_HERE"
+        apiKey: "AIzaSyAJ5DFnPW8gjfqSGD0gPCcqw-iSAbqZBnU",
+        authDomain: "soft-challenge-fda98.firebaseapp.com",
+        projectId: "soft-challenge-fda98",
+        storageBucket: "soft-challenge-fda98.firebasestorage.app",
+        messagingSenderId: "246050406415",
+        appId: "1:246050406415:web:2c8cd6c3a42aecd37ce37a",
+        measurementId: "G-P5D07YR35N"
     },
     
     // App settings

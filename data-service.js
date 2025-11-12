@@ -14,7 +14,6 @@ class DataService {
         try {
             if (this.useMockData) {
                 console.log('Using Mock Data');
-                // Mock data is already initialized in mockData.js
                 this.initialized = true;
             } else {
                 console.log('Using Firebase');
@@ -25,7 +24,6 @@ class DataService {
             return true;
         } catch (error) {
             console.error('Data service initialization error:', error);
-            // Fallback to mock data if Firebase fails
             console.log('Falling back to Mock Data');
             this.useMockData = true;
             this.initialized = true;
@@ -118,32 +116,6 @@ class DataService {
             return await MockAPI.getUserStats(userName);
         } else {
             return await firebaseService.getUserStats(userName);
-        }
-    }
-    
-    // ===== Data Management =====
-    
-    async exportAllData() {
-        if (this.useMockData) {
-            return await MockAPI.exportData();
-        } else {
-            return await firebaseService.exportAllData();
-        }
-    }
-    
-    async importData(data) {
-        if (this.useMockData) {
-            return await MockAPI.importData(data);
-        } else {
-            return await firebaseService.importData(data);
-        }
-    }
-    
-    async resetAllData() {
-        if (this.useMockData) {
-            return await MockAPI.resetAllData();
-        } else {
-            return await firebaseService.resetAllData();
         }
     }
     

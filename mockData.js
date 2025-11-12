@@ -105,7 +105,6 @@ class MockDataGenerator {
                 cheatMealsUsed: {},
                 joinDate: this.startDate.toISOString(),
                 lastActive: null,
-                achievements: [],
                 stats: {
                     totalDays: 0,
                     perfectDays: 0,
@@ -162,41 +161,6 @@ class MockDataGenerator {
             });
         }
         
-        // Generate some achievements
-        this.users.forEach(userName => {
-            const userData = data.users[userName];
-            const achievements = [];
-            
-            if (userData.stats.totalDays >= 7) {
-                achievements.push({
-                    id: 'week_warrior',
-                    name: 'Guerrero de la Semana',
-                    icon: '🗓️',
-                    unlockedAt: new Date().toISOString()
-                });
-            }
-            
-            if (userData.stats.perfectDays >= 3) {
-                achievements.push({
-                    id: 'perfect_trio',
-                    name: 'Trío Perfecto',
-                    icon: '⭐',
-                    unlockedAt: new Date().toISOString()
-                });
-            }
-            
-            if (userData.points >= 50) {
-                achievements.push({
-                    id: 'half_century',
-                    name: 'Medio Centenar',
-                    icon: '🎯',
-                    unlockedAt: new Date().toISOString()
-                });
-            }
-            
-            userData.achievements = achievements;
-        });
-        
         return data;
     }
     
@@ -225,7 +189,6 @@ class MockDataGenerator {
                 totalDays: userData.stats.totalDays,
                 currentStreak: userData.stats.currentStreak,
                 lastActive: userData.lastActive,
-                achievements: userData.achievements.length
             }))
             .sort((a, b) => b.points - a.points);
     }
@@ -257,7 +220,6 @@ class MockDataGenerator {
             currentStreak: userData.stats.currentStreak,
             longestStreak: userData.stats.longestStreak,
             last7Days: last7Days,
-            achievements: userData.achievements,
             completionRate: userData.stats.totalDays > 0 
                 ? Math.round((userData.stats.perfectDays / userData.stats.totalDays) * 100) 
                 : 0
@@ -376,41 +338,6 @@ const MockAPI = {
             }, 200);
         });
     },
-    
-    // Reset all data
-    async resetAllData() {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                MOCK_DATABASE = MockData.generateMockData(0);
-                saveMockData();
-                resolve(true);
-            }, 500);
-        });
-    },
-    
-    // Export data
-    async exportData() {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(MOCK_DATABASE);
-            }, 100);
-        });
-    },
-    
-    // Import data
-    async importData(data) {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                try {
-                    MOCK_DATABASE = data;
-                    saveMockData();
-                    resolve(true);
-                } catch (error) {
-                    reject(error);
-                }
-            }, 300);
-        });
-    }
 };
 
 // Export for use in other modules

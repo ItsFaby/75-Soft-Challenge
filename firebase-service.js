@@ -43,8 +43,6 @@ class FirebaseService {
     collections = {
         users: 'users',
         dailyLogs: 'dailyLogs',
-        achievements: 'achievements',
-        settings: 'settings'
     };
     
     // ===== User Operations =====
@@ -290,58 +288,6 @@ class FirebaseService {
                     callback({ id: doc.id, ...doc.data() });
                 }
             });
-    }
-    
-    // ===== Data Management =====
-    
-    // Export all data
-    async exportAllData() {
-        try {
-            const users = await this.getAllUsers();
-            const logs = await this.getAllDailyLogs();
-            
-            return {
-                users: users,
-                dailyLogs: logs,
-                exportDate: new Date().toISOString(),
-                version: AppConfig.APP_SETTINGS.version
-            };
-        } catch (error) {
-            console.error('Error exporting data:', error);
-            throw error;
-        }
-    }
-    
-    // Import data (admin only)
-    async importData(data) {
-        try {
-            const batch = this.db.batch();
-            
-            // Import users
-            if (data.users) {
-                Object.entries(data.users).forEach(([userName, userData]) => {
-                    const userRef = this.db.collection(this.collections.users).doc(userName);
-                    batch.set(userRef, userData);
-                });
-            }
-            
-            // Import daily logs
-            if (data.dailyLogs) {
-                Object.entries(data.dailyLogs).forEach(([userName, userLogs]) => {
-                    Object.entries(userLogs).forEach(([date, logData]) => {
-                        const logId = `${userName}_${date}`;
-                        const logRef = this.db.collection(this.collections.dailyLogs).doc(logId);
-                        batch.set(logRef, logData);
-                    });
-                });
-            }
-            
-            await batch.commit();
-            return true;
-        } catch (error) {
-            console.error('Error importing data:', error);
-            throw error;
-        }
     }
 }
 

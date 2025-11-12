@@ -19,7 +19,6 @@ class DataService {
             } else {
                 console.log('Using Firebase');
                 await firebaseService.initialize();
-                await firebaseService.initializeDefaultUsers();
                 this.initialized = true;
             }
             
@@ -32,19 +31,6 @@ class DataService {
             this.initialized = true;
             return true;
         }
-    }
-    
-    // Switch data source
-    async switchDataSource(useMock) {
-        this.useMockData = useMock;
-        AppConfig.USE_MOCK_DATA = useMock;
-        saveConfig();
-        
-        if (!useMock && !firebaseService.initialized) {
-            await this.initialize();
-        }
-        
-        return true;
     }
     
     // ===== User Operations =====
@@ -201,8 +187,22 @@ class DataService {
     
     // Get today's date string
     getTodayString() {
-        return new Date().toISOString().split('T')[0];
+         const date = new Date();
+        date.setDate(date.getDate() + 6); // suma 1 día
+        return date.toISOString().split('T')[0];
     }
+
+    getDaysSinceChallengeStart() {
+        const start = new Date(AppConfig.APP_SETTINGS.startDate);    
+        const today = new Date();                 
+
+        const diffMs = today - start;
+
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        return diffDays;
+    }
+
     
     // Get week number
     getWeekNumber(date) {

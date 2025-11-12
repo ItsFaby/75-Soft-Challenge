@@ -55,38 +55,6 @@ h1 {
     opacity: 0.95;
 }
 
-/* ===== Data Source Indicator ===== */
-.data-source-indicator {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255,255,255,0.9);
-    padding: 8px 15px;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9em;
-    font-weight: 600;
-}
-
-.indicator-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--success-color);
-    animation: pulse 2s infinite;
-}
-
-.indicator-dot.firebase {
-    background: #FFA611;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
 /* ===== Tab Navigation ===== */
 .tab-navigation {
     display: flex;
@@ -180,14 +148,14 @@ h1 {
     background: linear-gradient(135deg, #FFD700, #FFA500);
     width: 140px;
     height: 180px;
-    order: 2;
+    order: 1;
 }
 
 .podium-place.second {
     background: linear-gradient(135deg, #C0C0C0, #808080);
     width: 130px;
     height: 150px;
-    order: 1;
+    order: 2;
 }
 
 .podium-place.third {
@@ -201,7 +169,7 @@ h1 {
     background: linear-gradient(135deg, #E8E8E8, #B8B8B8);
     width: 120px;
     height: 110px;
-    order: 0;
+    order: 4;
 }
 
 .medal {
@@ -210,13 +178,6 @@ h1 {
     left: 50%;
     transform: translateX(-50%);
     font-size: 2em;
-}
-
-.podium-position {
-    font-size: 2.5em;
-    font-weight: bold;
-    color: white;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .podium-name {
@@ -630,126 +591,6 @@ h1 {
     display: block;
 }
 
-/* ===== Settings ===== */
-.settings-section {
-    margin-bottom: 30px;
-    padding: 20px;
-    background: var(--light);
-    border-radius: var(--border-radius);
-}
-
-.settings-section h3 {
-    margin-bottom: 15px;
-    color: var(--primary-color);
-}
-
-.settings-option {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.settings-note {
-    color: #666;
-    font-size: 0.9em;
-    margin-top: 10px;
-}
-
-.firebase-config {
-    display: grid;
-    gap: 15px;
-}
-
-.config-field {
-    display: grid;
-    gap: 5px;
-}
-
-.config-field label {
-    font-weight: 600;
-    color: #555;
-}
-
-.config-field input {
-    padding: 10px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-.save-config-button {
-    background: var(--success-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-top: 10px;
-}
-
-.action-button {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    margin: 5px;
-}
-
-.action-button.danger {
-    background: var(--danger-color);
-}
-
-/* ===== Switch Toggle ===== */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 30px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background-color: var(--success-color);
-}
-
-input:checked + .slider:before {
-    transform: translateX(30px);
-}
-
 /* ===== Toast Notifications ===== */
 .toast-container {
     position: fixed;
@@ -796,69 +637,6 @@ input:checked + .slider:before {
         transform: translateX(0);
         opacity: 1;
     }
-}
-
-/* ===== Modal ===== */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    animation: fadeIn 0.3s ease;
-}
-
-.modal-content {
-    background-color: white;
-    margin: 10% auto;
-    padding: 30px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: var(--box-shadow);
-    animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.modal-close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.modal-close:hover {
-    color: var(--dark);
-}
-
-.modal-title {
-    color: var(--primary-color);
-    margin-bottom: 15px;
-}
-
-.modal-body {
-    margin: 20px 0;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
 }
 
 /* ===== Animations ===== */

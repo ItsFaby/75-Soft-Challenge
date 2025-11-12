@@ -23,7 +23,9 @@ const AppConfig = {
         pointsPerActivity: 1,
         penaltyPoints: 3,
         weeklyBonusPoints: 4,
-        dailyBonusPoints: 1
+        dailyBonusPoints: 1,
+        startDate : "2025-10-01",
+        endDate: ""
     },
     
     // Users configuration

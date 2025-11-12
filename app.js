@@ -36,10 +36,7 @@ class App {
             
             this.initialized = true;
             console.log('App initialized successfully');
-            
-            // Show welcome toast
-            this.showToast('¡Bienvenido a 75 Soft Tracker! 💪', 'success');
-            
+
         } catch (error) {
             console.error('App initialization error:', error);
             this.hideGlobalLoader();
@@ -110,62 +107,6 @@ class App {
                 this.updateHistory();
             });
         }
-        
-        // Export history
-        const exportButton = document.getElementById('exportHistory');
-        if (exportButton) {
-            exportButton.addEventListener('click', () => {
-                this.exportHistory();
-            });
-        }
-        
-        // Settings
-        const useFirebase = document.getElementById('useFirebase');
-        if (useFirebase) {
-            useFirebase.checked = !AppConfig.USE_MOCK_DATA;
-            useFirebase.addEventListener('change', (e) => {
-                this.toggleDataSource(e.target.checked);
-            });
-        }
-        
-        // Save Firebase config
-        const saveConfigButton = document.getElementById('saveFirebaseConfig');
-        if (saveConfigButton) {
-            saveConfigButton.addEventListener('click', () => {
-                this.saveFirebaseConfig();
-            });
-        }
-        
-        // Action buttons
-        const resetButton = document.getElementById('resetAllData');
-        const backupButton = document.getElementById('backupData');
-        const restoreButton = document.getElementById('restoreData');
-        
-        if (resetButton) {
-            resetButton.addEventListener('click', () => {
-                this.resetAllData();
-            });
-        }
-        
-        if (backupButton) {
-            backupButton.addEventListener('click', () => {
-                this.backupData();
-            });
-        }
-        
-        if (restoreButton) {
-            restoreButton.addEventListener('click', () => {
-                this.restoreData();
-            });
-        }
-        
-        // Modal close
-        const modalClose = document.querySelector('.modal-close');
-        if (modalClose) {
-            modalClose.addEventListener('click', () => {
-                this.closeModal();
-            });
-        }
     }
     
     // Switch tab
@@ -212,10 +153,7 @@ class App {
             
             // Update stats
             await this.updateStats();
-            
-            // Update summary
-            await this.updateSummary();
-            
+               
         } catch (error) {
             console.error('Error loading dashboard:', error);
             this.showToast('Error al cargar el dashboard', 'error');
@@ -229,7 +167,7 @@ class App {
         
         const leaderboard = await dataService.getLeaderboard();
         const positions = ['first', 'second', 'third', 'fourth'];
-        const medals = ['🥇', '🥈', '🥉', ''];
+        const medals = ['🥇', '🥈', '🥉', '🏅'];
         
         podium.innerHTML = '';
         
@@ -237,8 +175,7 @@ class App {
             const div = document.createElement('div');
             div.className = `podium-place ${positions[index]}`;
             div.innerHTML = `
-                ${medals[index] ? `<span class="medal">${medals[index]}</span>` : ''}
-                <div class="podium-position">${index + 1}°</div>
+                <span class="medal">${medals[index]}</span>
                 <div class="podium-name">${user.name}</div>
                 <div class="podium-points">${user.points} pts</div>
             `;
@@ -255,13 +192,11 @@ class App {
         const today = dataService.getTodayString();
         
         // Calculate stats
-        let totalDays = 0;
         let todayCompleted = 0;
         let totalPoints = 0;
         
         for (const userName of Object.keys(users)) {
             const userData = users[userName];
-            totalDays += userData.stats?.totalDays || 0;
             totalPoints += userData.points || 0;
             
             const hasLogged = await dataService.hasLoggedToday(userName, today);
@@ -270,12 +205,14 @@ class App {
         
         const leaderboard = await dataService.getLeaderboard();
         const leader = leaderboard[0];
+
+        var challengeDay = dataService.getDaysSinceChallengeStart();
         
         statsGrid.innerHTML = `
             <div class="stat-card">
                 <h3>📅 Días Totales</h3>
-                <div class="stat-value">${Math.floor(totalDays / 4)}</div>
-                <div class="stat-label">días de competencia</div>
+                <div class="stat-value">${challengeDay}</div>
+                <div class="stat-label">día de competencia</div>
             </div>
             <div class="stat-card">
                 <h3>✅ Completados Hoy</h3>
@@ -293,31 +230,6 @@ class App {
                 <div class="stat-label">para el ganador</div>
             </div>
         `;
-    }
-    
-    // Update summary
-    async updateSummary() {
-        const summaryGrid = document.getElementById('summaryGrid');
-        if (!summaryGrid) return;
-        
-        const users = await dataService.getAllUsers();
-        let html = '';
-        
-        for (const userName of Object.keys(users)) {
-            const stats = await dataService.getUserStats(userName);
-            html += `
-                <div class="summary-card">
-                    <h3>${userName}</h3>
-                    <div class="stat-value">${stats.currentStreak}</div>
-                    <div class="stat-label">racha actual</div>
-                    <div style="margin-top: 10px;">
-                        <small>Tasa: ${stats.completionRate}%</small>
-                    </div>
-                </div>
-            `;
-        }
-        
-        summaryGrid.innerHTML = html;
     }
     
     // Load daily check
@@ -768,42 +680,6 @@ class App {
         return logs.filter(log => new Date(log.date) >= cutoffDate);
     }
     
-    // Export history
-    async exportHistory() {
-        try {
-            const data = await dataService.exportAllData();
-            
-            // Convert to CSV
-            let csv = 'Fecha,Usuario,Ejercicio,Comida,Lectura,Agua,NoAlcohol,Bonus,Puntos\n';
-            
-            Object.entries(data.users || {}).forEach(([userName, userData]) => {
-                Object.entries(userData.dailyLogs || {}).forEach(([date, log]) => {
-                    csv += `${date},${userName},`;
-                    csv += `${log.activities?.exercise ? 'Si' : 'No'},`;
-                    csv += `${log.activities?.healthyFood ? 'Si' : 'No'},`;
-                    csv += `${log.activities?.reading ? 'Si' : 'No'},`;
-                    csv += `${log.activities?.water ? 'Si' : 'No'},`;
-                    csv += `${log.activities?.noAlcohol ? 'Si' : 'No'},`;
-                    csv += `${log.dailyBonus ? 'Si' : 'No'},`;
-                    csv += `${log.pointsEarned}\n`;
-                });
-            });
-            
-            // Download CSV
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `75soft_export_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-            
-            this.showToast('Datos exportados exitosamente', 'success');
-            
-        } catch (error) {
-            console.error('Error exporting data:', error);
-            this.showToast('Error al exportar datos', 'error');
-        }
-    }
-    
     // Reset daily form
     resetDailyForm() {
         const checkboxes = document.querySelectorAll('.checklist input[type="checkbox"]');
@@ -853,49 +729,7 @@ class App {
             }, 300);
         }, 3000);
     }
-    
-    // Show confirm dialog
-    showConfirm(title, message) {
-        return new Promise((resolve) => {
-            const modal = document.getElementById('modal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            const modalFooter = document.getElementById('modalFooter');
-            
-            if (!modal) {
-                resolve(false);
-                return;
-            }
-            
-            modalTitle.textContent = title;
-            modalBody.textContent = message;
-            modalFooter.innerHTML = `
-                <button class="action-button" onclick="app.confirmResponse(false)">Cancelar</button>
-                <button class="action-button danger" onclick="app.confirmResponse(true)">Confirmar</button>
-            `;
-            
-            this.confirmResolve = resolve;
-            modal.style.display = 'block';
-        });
-    }
-    
-    // Confirm response
-    confirmResponse(value) {
-        if (this.confirmResolve) {
-            this.confirmResolve(value);
-            this.confirmResolve = null;
-        }
-        this.closeModal();
-    }
-    
-    // Close modal
-    closeModal() {
-        const modal = document.getElementById('modal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-    
+
     // Show global loader
     showGlobalLoader() {
         // Add loading class to body

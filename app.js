@@ -25,9 +25,6 @@ class App {
             // Setup event listeners
             this.setupEventListeners();
             
-            // Update data source indicator
-            this.updateDataSourceIndicator();
-            
             // Load initial data
             await this.loadDashboard();
             
@@ -203,9 +200,6 @@ class App {
                 break;
             case 'history':
                 this.updateHistory();
-                break;
-            case 'settings':
-                this.loadSettings();
                 break;
         }
     }
@@ -810,130 +804,6 @@ class App {
         }
     }
     
-    // Load settings
-    loadSettings() {
-        // Load Firebase config if saved
-        const apiKey = document.getElementById('firebaseApiKey');
-        const authDomain = document.getElementById('firebaseAuthDomain');
-        const projectId = document.getElementById('firebaseProjectId');
-        
-        if (apiKey) apiKey.value = AppConfig.FIREBASE_CONFIG.apiKey || '';
-        if (authDomain) authDomain.value = AppConfig.FIREBASE_CONFIG.authDomain || '';
-        if (projectId) projectId.value = AppConfig.FIREBASE_CONFIG.projectId || '';
-    }
-    
-    // Toggle data source
-    async toggleDataSource(useFirebase) {
-        try {
-            this.showGlobalLoader();
-            
-            await dataService.switchDataSource(!useFirebase);
-            
-            // Update indicator
-            this.updateDataSourceIndicator();
-            
-            // Reload data
-            await this.loadDashboard();
-            
-            this.hideGlobalLoader();
-            
-            const source = useFirebase ? 'Firebase' : 'Mock Data';
-            this.showToast(`Cambiado a ${source}`, 'success');
-            
-        } catch (error) {
-            console.error('Error switching data source:', error);
-            this.showToast('Error al cambiar fuente de datos', 'error');
-            this.hideGlobalLoader();
-        }
-    }
-    
-    // Save Firebase config
-    saveFirebaseConfig() {
-        const apiKey = document.getElementById('firebaseApiKey')?.value;
-        const authDomain = document.getElementById('firebaseAuthDomain')?.value;
-        const projectId = document.getElementById('firebaseProjectId')?.value;
-        
-        if (!apiKey || !authDomain || !projectId) {
-            this.showToast('Por favor completa todos los campos', 'warning');
-            return;
-        }
-        
-        AppConfig.FIREBASE_CONFIG.apiKey = apiKey;
-        AppConfig.FIREBASE_CONFIG.authDomain = authDomain;
-        AppConfig.FIREBASE_CONFIG.projectId = projectId;
-        
-        if (saveConfig()) {
-            this.showToast('Configuración guardada exitosamente', 'success');
-        } else {
-            this.showToast('Error al guardar configuración', 'error');
-        }
-    }
-    
-    // Reset all data
-    async resetAllData() {
-        const confirmed = await this.showConfirm(
-            '⚠️ Resetear Todos los Datos',
-            '¿Estás seguro de que quieres borrar todos los datos? Esta acción no se puede deshacer.'
-        );
-        
-        if (!confirmed) return;
-        
-        try {
-            await dataService.resetAllData();
-            await this.loadDashboard();
-            this.showToast('Datos reseteados exitosamente', 'success');
-        } catch (error) {
-            console.error('Error resetting data:', error);
-            this.showToast('Error al resetear datos', 'error');
-        }
-    }
-    
-    // Backup data
-    async backupData() {
-        try {
-            const data = await dataService.exportAllData();
-            const json = JSON.stringify(data, null, 2);
-            
-            const blob = new Blob([json], { type: 'application/json' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `75soft_backup_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            
-            this.showToast('Backup creado exitosamente', 'success');
-        } catch (error) {
-            console.error('Error creating backup:', error);
-            this.showToast('Error al crear backup', 'error');
-        }
-    }
-    
-    // Restore data
-    async restoreData() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        
-        input.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
-                
-                await dataService.importData(data);
-                await this.loadDashboard();
-                
-                this.showToast('Datos restaurados exitosamente', 'success');
-            } catch (error) {
-                console.error('Error restoring data:', error);
-                this.showToast('Error al restaurar datos', 'error');
-            }
-        };
-        
-        input.click();
-    }
-    
     // Reset daily form
     resetDailyForm() {
         const checkboxes = document.querySelectorAll('.checklist input[type="checkbox"]');
@@ -951,23 +821,6 @@ class App {
         const penaltyAlert = document.getElementById('penaltyAlert');
         if (penaltyAlert) {
             penaltyAlert.classList.remove('show');
-        }
-    }
-    
-    // Update data source indicator
-    updateDataSourceIndicator() {
-        const indicator = document.getElementById('dataSourceIndicator');
-        if (!indicator) return;
-        
-        const dot = indicator.querySelector('.indicator-dot');
-        const text = indicator.querySelector('.indicator-text');
-        
-        if (AppConfig.USE_MOCK_DATA) {
-            dot.classList.remove('firebase');
-            text.textContent = 'Mock Data';
-        } else {
-            dot.classList.add('firebase');
-            text.textContent = 'Firebase';
         }
     }
     

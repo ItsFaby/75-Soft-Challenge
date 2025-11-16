@@ -159,8 +159,12 @@ class DataService {
     
     // Get today's date string
     getTodayString() {
-         const date = new Date();
-        date.setDate(date.getDate() + 6); // suma 1 día
+        const date = new Date();
+        // Apply development offset if DEV_MODE is enabled
+        if (AppConfig.APP_SETTINGS.DEV_MODE && AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET !== 0) {
+            date.setDate(date.getDate() + AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET);
+            console.log(`🔧 DEV MODE: Date offset by ${AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET} days`);
+        }
         return date.toISOString().split('T')[0];
     }
 

@@ -25,7 +25,11 @@ const AppConfig = {
         weeklyBonusPoints: 4,
         dailyBonusPoints: 1,
         startDate : "2025-10-01",
-        endDate: ""
+        endDate: "",
+
+        // Development mode settings (set to true to enable dev tools)
+        DEV_MODE: false, // Set to true to show dev controls in UI
+        DEV_DAYS_OFFSET: 0 // Change this to advance/rewind days (only works when DEV_MODE is true)
     },
     
     // Users configuration

@@ -71,6 +71,7 @@ class App {
     // Free passes
     const restDay = document.getElementById('restDay');
     const cheatMeal = document.getElementById('cheatMeal');
+    const sodaPass = document.getElementById('sodaPass');
 
     if (restDay) {
       restDay.addEventListener('change', (e) => {
@@ -81,6 +82,12 @@ class App {
     if (cheatMeal) {
       cheatMeal.addEventListener('change', (e) => {
         this.handleFreePass('cheatMeal', e.target.checked);
+      });
+    }
+
+    if (sodaPass) {
+      sodaPass.addEventListener('change', (e) => {
+        this.handleFreePass('sodaPass', e.target.checked);
       });
     }
 
@@ -154,6 +161,9 @@ class App {
 
       // Update stats
       await this.updateStats();
+
+      // Update streaks
+      await this.updateStreaks();
     } catch (error) {
       console.error('Error loading dashboard:', error);
       this.showToast('Error al cargar el dashboard', 'error');
@@ -232,6 +242,47 @@ class App {
         `;
   }
 
+  // Update streaks
+  async updateStreaks() {
+    const streaksGrid = document.getElementById('streaksGrid');
+    if (!streaksGrid) return;
+
+    const streaks = await dataService.getAllStreaks();
+
+    // Find the longest streak holder
+    const longestStreakHolder = streaks.reduce((max, user) =>
+      user.longestStreak > max.longestStreak ? user : max
+    , streaks[0]);
+
+    let html = '<div class="streaks-list">';
+
+    streaks.forEach((user, index) => {
+      const isLongestStreak = user.longestStreak === longestStreakHolder.longestStreak && user.longestStreak > 0;
+      const streakClass = isLongestStreak ? 'longest-streak' : '';
+
+      html += `
+        <div class="streak-item ${streakClass}">
+          <div class="streak-user">
+            ${isLongestStreak ? '🏆 ' : ''}
+            <strong>${user.userName}</strong>
+          </div>
+          <div class="streak-stats">
+            <div class="streak-current">
+              🔥 Racha actual: <strong>${user.currentStreak}</strong> días
+            </div>
+            <div class="streak-longest">
+              ⭐ Racha más larga: <strong>${user.longestStreak}</strong> días
+              ${isLongestStreak ? ' 👑' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+    streaksGrid.innerHTML = html;
+  }
+
   // Load daily check
   async loadDailyCheck() {
     // Update date display
@@ -247,12 +298,17 @@ class App {
       dateDisplay.textContent = `📅 ${today}`;
     }
 
-    // Update daily challenge
-    const dayIndex = new Date().getDay();
-    const challenge = AppConfig.DAILY_CHALLENGES[dayIndex];
-    const label = document.getElementById('dailyBonusLabel');
-    if (label) {
-      label.textContent = challenge.text;
+    // Update daily challenge - now personalized per user
+    if (this.currentUser) {
+      const dayIndex = new Date().getDay();
+      const userChallenges = AppConfig.DAILY_CHALLENGES[this.currentUser];
+      const challenge = userChallenges ? userChallenges[dayIndex] : null;
+      const label = document.getElementById('dailyBonusLabel');
+      if (label && challenge) {
+        label.textContent = challenge.text;
+      } else if (label) {
+        label.textContent = 'Selecciona tu usuario para ver tu reto personal';
+      }
     }
 
     // Check current user
@@ -307,6 +363,7 @@ class App {
         const dailyBonus = document.getElementById('dailyBonus');
         const restDay = document.getElementById('restDay');
         const cheatMeal = document.getElementById('cheatMeal');
+        const sodaPass = document.getElementById('sodaPass');
 
         if (dailyBonus) {
           dailyBonus.checked = todayLog.dailyBonus;
@@ -319,6 +376,10 @@ class App {
         if (cheatMeal) {
           cheatMeal.checked = todayLog.cheatMeal;
           cheatMeal.disabled = true;
+        }
+        if (sodaPass) {
+          sodaPass.checked = todayLog.sodaPass;
+          sodaPass.disabled = true;
         }
       }
     } else {
@@ -351,8 +412,10 @@ class App {
     const passes = await dataService.checkFreePasses(this.currentUser);
     const restDay = document.getElementById('restDay');
     const cheatMeal = document.getElementById('cheatMeal');
+    const sodaPass = document.getElementById('sodaPass');
     const restDayCount = document.getElementById('restDayCount');
     const cheatMealCount = document.getElementById('cheatMealCount');
+    const sodaPassCount = document.getElementById('sodaPassCount');
 
     if (restDay) {
       restDay.disabled = passes.restDayUsed;
@@ -362,14 +425,23 @@ class App {
       cheatMeal.disabled = passes.cheatMealUsed;
       cheatMeal.checked = false;
     }
+    if (sodaPass) {
+      sodaPass.disabled = passes.sodaPassUsed;
+      sodaPass.checked = false;
+    }
     if (restDayCount) {
       restDayCount.textContent = passes.restDayUsed
-        ? '✅ Usado'
+        ? '✅ Usado esta semana'
         : '1 disponible';
     }
     if (cheatMealCount) {
       cheatMealCount.textContent = passes.cheatMealUsed
-        ? '✅ Usado'
+        ? '✅ Usado esta semana'
+        : '1 disponible';
+    }
+    if (sodaPassCount) {
+      sodaPassCount.textContent = passes.sodaPassUsed
+        ? '✅ Usado esta semana'
         : '1 disponible';
     }
   }
@@ -406,6 +478,22 @@ class App {
         healthyFood.disabled = false;
         healthyFood.checked = false;
         healthyFoodItem.classList.remove('completed');
+        this.updatePointsPreview();
+      }
+    } else if (type === 'sodaPass') {
+      const noAlcohol = document.getElementById('noAlcohol');
+      const noAlcoholItem = document.getElementById('noAlcoholItem');
+
+      if (checked) {
+        noAlcohol.checked = true;
+        noAlcohol.disabled = true;
+        noAlcoholItem.classList.add('completed');
+        document.getElementById('noAlcoholPoints').textContent =
+          '🥤 Bebida permitida';
+      } else {
+        noAlcohol.disabled = false;
+        noAlcohol.checked = false;
+        noAlcoholItem.classList.remove('completed');
         this.updatePointsPreview();
       }
     }
@@ -483,15 +571,24 @@ class App {
       progress.days.forEach((day) => {
         const classes = ['day-indicator'];
         if (day.completed) classes.push('completed');
+        if (day.failed) classes.push('failed');
         if (day.isToday) classes.push('today');
         if (day.isFuture) classes.push('future');
 
-        html += `<div class="${classes.join(' ')}" title="${
-          day.dayName
+        html += `<div class="${classes.join(' ')}" title="${day.dayName}${
+          day.failed ? ' - Fallado' : ''
         }"></div>`;
       });
       html += '</div>';
-      html += `<small>${progress.completedDays}/7 días completados esta semana</small>`;
+
+      // Show status message
+      if (progress.isFailed) {
+        html += `<small style="color: #dc3545;">❌ Objetivo semanal perdido - Faltó un día (${progress.completedDays}/7)</small>`;
+      } else if (progress.isComplete) {
+        html += `<small style="color: #28a745;">✅ ¡Semana perfecta completada! (7/7)</small>`;
+      } else {
+        html += `<small>${progress.completedDays}/7 días completados esta semana (Lunes-Domingo)</small>`;
+      }
 
       container.innerHTML = html;
     }
@@ -501,7 +598,13 @@ class App {
       const weeklyBonus = document.getElementById('weeklyBonus');
       if (weeklyBonus) {
         weeklyBonus.checked = true;
-        weeklyBonus.disabled = true;
+        weeklyBonus.disabled = false; // Allow to check if complete
+      }
+    } else {
+      const weeklyBonus = document.getElementById('weeklyBonus');
+      if (weeklyBonus) {
+        weeklyBonus.checked = false;
+        weeklyBonus.disabled = true; // Disable if not complete
       }
     }
   }
@@ -528,6 +631,7 @@ class App {
     const dailyBonus = document.getElementById('dailyBonus')?.checked || false;
     const restDay = document.getElementById('restDay')?.checked || false;
     const cheatMeal = document.getElementById('cheatMeal')?.checked || false;
+    const sodaPass = document.getElementById('sodaPass')?.checked || false;
 
     // Check weekly bonus
     const weeklyBonus = await dataService.isWeekComplete(this.currentUser);
@@ -547,6 +651,7 @@ class App {
       weeklyBonus: weeklyBonus,
       restDay: restDay,
       cheatMeal: cheatMeal,
+      sodaPass: sodaPass,
       pointsEarned: result.points,
       breakdown: result.breakdown,
     };
@@ -568,6 +673,13 @@ class App {
         await dataService.updateFreePass(
           this.currentUser,
           'cheatMeal',
+          currentWeek
+        );
+      }
+      if (sodaPass) {
+        await dataService.updateFreePass(
+          this.currentUser,
+          'sodaPass',
           currentWeek
         );
       }
@@ -662,20 +774,39 @@ class App {
         }${log.pointsEarned}</span></td>`;
         html += '<td>';
 
-        // Activity badges
+        // Activity badges - show both completed and failed
         if (log.activities) {
+          const userConfig = AppConfig.USERS[log.userName];
+          const personalChallenge = userConfig ? userConfig.personalChallenge : null;
+
           Object.entries(log.activities).forEach(([activity, completed]) => {
             if (completed) {
-              html += `<span class="activity-badge">✅ ${activity}</span>`;
+              html += `<span class="activity-badge success">✅ ${activity}</span>`;
+            } else {
+              // Show failed activities
+              if (activity === personalChallenge) {
+                html += `<span class="activity-badge penalty">❌ ${activity} (-3)</span>`;
+              } else {
+                html += `<span class="activity-badge failed">❌ ${activity} (-1)</span>`;
+              }
             }
           });
         }
 
         if (log.dailyBonus) {
-          html += '<span class="activity-badge">⭐ Bonus</span>';
+          html += '<span class="activity-badge bonus">⭐ Bonus diario</span>';
         }
         if (log.weeklyBonus) {
-          html += '<span class="activity-badge">🎯 Semanal</span>';
+          html += '<span class="activity-badge bonus">🎯 Bonus semanal</span>';
+        }
+        if (log.restDay) {
+          html += '<span class="activity-badge pass">😴 Día descanso</span>';
+        }
+        if (log.cheatMeal) {
+          html += '<span class="activity-badge pass">🍔 Cheat meal</span>';
+        }
+        if (log.sodaPass) {
+          html += '<span class="activity-badge pass">🥤 Bebida permitida</span>';
         }
 
         html += '</td></tr>';

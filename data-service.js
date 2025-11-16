@@ -10,7 +10,7 @@ class DataService {
     // Initialize the data service
     async initialize() {
         if (this.initialized) return true;
-        
+
         try {
             if (this.useMockData) {
                 console.log('Using Mock Data');
@@ -18,9 +18,13 @@ class DataService {
             } else {
                 console.log('Using Firebase');
                 await firebaseService.initialize();
+
+                // Initialize users from config if database is empty
+                await this.initializeUsersIfNeeded();
+
                 this.initialized = true;
             }
-            
+
             return true;
         } catch (error) {
             console.error('Data service initialization error:', error);
@@ -28,6 +32,50 @@ class DataService {
             this.useMockData = true;
             this.initialized = true;
             return true;
+        }
+    }
+
+    // Initialize users from config if they don't exist
+    async initializeUsersIfNeeded() {
+        try {
+            const existingUsers = await this.getAllUsers();
+            const existingUserNames = Object.keys(existingUsers);
+
+            // Get users from config
+            const configUserNames = Object.keys(AppConfig.USERS);
+
+            // Check which users need to be initialized
+            const usersToCreate = configUserNames.filter(userName => !existingUserNames.includes(userName));
+
+            if (usersToCreate.length > 0) {
+                console.log(`Initializing ${usersToCreate.length} users from config:`, usersToCreate);
+
+                for (const userName of usersToCreate) {
+                    const defaultUserData = {
+                        name: userName,
+                        points: 0,
+                        lastActive: null,
+                        stats: {
+                            totalDays: 0,
+                            perfectDays: 0,
+                            currentStreak: 0,
+                            longestStreak: 0
+                        },
+                        restDaysUsed: {},
+                        cheatMealsUsed: {},
+                        sodaPassesUsed: {}
+                    };
+
+                    await this.saveUser(userName, defaultUserData);
+                }
+
+                console.log('Users initialized successfully');
+            } else {
+                console.log('All users from config already exist in database');
+            }
+        } catch (error) {
+            console.error('Error initializing users:', error);
+            // Don't throw error, just log it - app should still work
         }
     }
     

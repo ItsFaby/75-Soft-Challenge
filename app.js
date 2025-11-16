@@ -202,6 +202,11 @@ class App {
 
     podium.innerHTML = '';
 
+    if (leaderboard.length === 0) {
+      podium.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay participantes aún. ¡Sé el primero en registrar tu progreso!</p>';
+      return;
+    }
+
     leaderboard.slice(0, 4).forEach((user, index) => {
       const div = document.createElement('div');
       div.className = `podium-place ${positions[index]}`;
@@ -225,6 +230,7 @@ class App {
     // Calculate stats
     let todayCompleted = 0;
     let totalPoints = 0;
+    const userCount = Object.keys(users).length;
 
     for (const userName of Object.keys(users)) {
       const userData = users[userName];
@@ -235,7 +241,7 @@ class App {
     }
 
     const leaderboard = await dataService.getLeaderboard();
-    const leader = leaderboard[0];
+    const leader = leaderboard.length > 0 ? leaderboard[0] : null;
 
     var challengeDay = dataService.getDaysSinceChallengeStart();
 
@@ -247,13 +253,13 @@ class App {
             </div>
             <div class="stat-card">
                 <h3>✅ Completados Hoy</h3>
-                <div class="stat-value">${todayCompleted}/4</div>
+                <div class="stat-value">${todayCompleted}/${userCount}</div>
                 <div class="stat-label">participantes</div>
             </div>
             <div class="stat-card">
                 <h3>👑 Líder Actual</h3>
-                <div class="stat-value">${leader.name}</div>
-                <div class="stat-label">${leader.points} puntos</div>
+                <div class="stat-value">${leader ? leader.name : 'Sin líder'}</div>
+                <div class="stat-label">${leader ? leader.points + ' puntos' : 'Comienza a participar'}</div>
             </div>
             <div class="stat-card">
                 <h3>💰 Premio</h3>
@@ -269,6 +275,11 @@ class App {
     if (!streaksGrid) return;
 
     const streaks = await dataService.getAllStreaks();
+
+    if (streaks.length === 0) {
+      streaksGrid.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay rachas registradas aún. ¡Comienza tu racha hoy!</p>';
+      return;
+    }
 
     // Find the longest streak holder
     const longestStreakHolder = streaks.reduce((max, user) =>

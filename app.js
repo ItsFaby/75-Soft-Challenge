@@ -25,6 +25,9 @@ class App {
       // Setup event listeners
       this.setupEventListeners();
 
+      // Setup development tools visibility
+      this.setupDevTools();
+
       // Load initial data
       await this.loadDashboard();
 
@@ -40,6 +43,24 @@ class App {
       console.error('App initialization error:', error);
       this.hideGlobalLoader();
       this.showToast('Error al inicializar la aplicación', 'error');
+    }
+  }
+
+  // Setup development tools visibility
+  setupDevTools() {
+    const devTools = document.getElementById('devTools');
+    if (devTools) {
+      if (AppConfig.APP_SETTINGS.DEV_MODE) {
+        devTools.style.display = 'block';
+        // Update offset display
+        const offsetDisplay = document.getElementById('devDaysOffset');
+        if (offsetDisplay) {
+          offsetDisplay.textContent = AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET;
+        }
+        console.log('🔧 DEV MODE ENABLED - Development tools are visible');
+      } else {
+        devTools.style.display = 'none';
+      }
     }
   }
 
@@ -344,19 +365,19 @@ class App {
     );
 
     if (hasLogged) {
-      // User already logged
+      // User already logged - allow editing during the day
       if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = '✅ Ya registraste hoy';
+        submitButton.disabled = false;
+        submitButton.textContent = '🔄 Actualizar Registro';
       }
 
-      // Load and show logged data
+      // Load and show logged data for editing
       const logs = await dataService.getUserDailyLogs(this.currentUser, 1);
       const todayLog = logs[today];
 
       if (todayLog) {
         checkboxes.forEach((cb) => {
-          cb.disabled = true;
+          cb.disabled = false; // Allow editing
           cb.checked = todayLog.activities && todayLog.activities[cb.value];
         });
 
@@ -367,21 +388,27 @@ class App {
 
         if (dailyBonus) {
           dailyBonus.checked = todayLog.dailyBonus;
-          dailyBonus.disabled = true;
+          dailyBonus.disabled = false; // Allow editing
         }
         if (restDay) {
           restDay.checked = todayLog.restDay;
-          restDay.disabled = true;
+          restDay.disabled = false; // Allow editing
         }
         if (cheatMeal) {
           cheatMeal.checked = todayLog.cheatMeal;
-          cheatMeal.disabled = true;
+          cheatMeal.disabled = false; // Allow editing
         }
         if (sodaPass) {
           sodaPass.checked = todayLog.sodaPass;
-          sodaPass.disabled = true;
+          sodaPass.disabled = false; // Allow editing
         }
       }
+
+      // Check free passes
+      await this.checkFreePasses();
+
+      // Update weekly progress
+      await this.updateWeeklyProgress();
     } else {
       // User can log
       if (submitButton) {
@@ -891,6 +918,72 @@ class App {
   hideGlobalLoader() {
     // Remove loading class from body
     document.body.classList.remove('loading');
+  }
+
+  // ===== Development Tools =====
+
+  // Advance or rewind days (for testing)
+  advanceDays(days) {
+    if (!AppConfig.APP_SETTINGS.DEV_MODE) {
+      console.warn('DEV_MODE is disabled. Enable it in config.js to use dev tools.');
+      return;
+    }
+
+    AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET += days;
+
+    // Update UI
+    const offsetDisplay = document.getElementById('devDaysOffset');
+    if (offsetDisplay) {
+      offsetDisplay.textContent = AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET;
+    }
+
+    this.showToast(`Días avanzados: ${days > 0 ? '+' : ''}${days} (Total: ${AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET})`, 'info');
+
+    // Reload current view
+    this.loadCurrentView();
+  }
+
+  // Reset days to today
+  resetDays() {
+    if (!AppConfig.APP_SETTINGS.DEV_MODE) {
+      console.warn('DEV_MODE is disabled. Enable it in config.js to use dev tools.');
+      return;
+    }
+
+    AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET = 0;
+
+    // Update UI
+    const offsetDisplay = document.getElementById('devDaysOffset');
+    if (offsetDisplay) {
+      offsetDisplay.textContent = '0';
+    }
+
+    this.showToast('Fecha reseteada a hoy', 'info');
+
+    // Reload current view
+    this.loadCurrentView();
+  }
+
+  // Load current view (helper for dev tools)
+  async loadCurrentView() {
+    const activeTab = document.querySelector('.tab-button.active');
+    if (activeTab) {
+      const tabName = activeTab.dataset.tab;
+      switch (tabName) {
+        case 'dashboard':
+          await this.loadDashboard();
+          break;
+        case 'daily':
+          await this.checkUserStatus();
+          break;
+        case 'analytics':
+          await this.loadAnalytics();
+          break;
+        case 'history':
+          await this.loadHistory();
+          break;
+      }
+    }
   }
 
   // Cleanup

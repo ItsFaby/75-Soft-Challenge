@@ -92,6 +92,19 @@
 
           <div class="date-display" id="dateDisplay"></div>
 
+          <!-- Development Tools (only visible when DEV_MODE is true) -->
+          <div id="devTools" style="display: none; margin: 20px 0; padding: 15px; background: #fff3cd; border: 2px dashed #ffc107; border-radius: 8px;">
+            <div style="font-weight: bold; color: #856404; margin-bottom: 10px;">🔧 HERRAMIENTAS DE DESARROLLO</div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <button onclick="app.advanceDays(-7)" style="padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">⏪ -7 días</button>
+              <button onclick="app.advanceDays(-1)" style="padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">⬅️ -1 día</button>
+              <button onclick="app.advanceDays(1)" style="padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">➡️ +1 día</button>
+              <button onclick="app.advanceDays(7)" style="padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">⏩ +7 días</button>
+              <button onclick="app.resetDays()" style="padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">🔄 Reset a Hoy</button>
+              <span style="margin-left: 10px; color: #856404; font-size: 14px;">Offset actual: <span id="devDaysOffset">0</span> días</span>
+            </div>
+          </div>
+
           <!-- Free Passes Section -->
           <div class="free-pass-section">
             <div class="free-pass-title">🎫 Pases Libres Semanales (Lunes - Domingo)</div>

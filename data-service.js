@@ -233,40 +233,135 @@ class DataService {
         return daysInWeek >= 7;
     }
     
+    // Calculate user streaks
+    async calculateUserStreak(userName) {
+        const logs = await this.getUserDailyLogs(userName, 100); // Get many days
+        const dates = Object.keys(logs).sort().reverse(); // Most recent first
+
+        let currentStreak = 0;
+        let longestStreak = 0;
+        let tempStreak = 0;
+
+        // Calculate current streak (from today backwards)
+        const today = this.getTodayString();
+        const todayDate = new Date(today);
+
+        for (let i = 0; i < 100; i++) {
+            const checkDate = new Date(todayDate);
+            checkDate.setDate(checkDate.getDate() - i);
+            const dateString = checkDate.toISOString().split('T')[0];
+
+            if (logs[dateString]) {
+                currentStreak++;
+            } else {
+                break;
+            }
+        }
+
+        // Calculate longest streak
+        const allDates = Object.keys(logs).sort();
+        if (allDates.length > 0) {
+            const startDate = new Date(allDates[0]);
+            const endDate = new Date(allDates[allDates.length - 1]);
+            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+            tempStreak = 0;
+            for (let i = 0; i < totalDays; i++) {
+                const checkDate = new Date(startDate);
+                checkDate.setDate(checkDate.getDate() + i);
+                const dateString = checkDate.toISOString().split('T')[0];
+
+                if (logs[dateString]) {
+                    tempStreak++;
+                    if (tempStreak > longestStreak) {
+                        longestStreak = tempStreak;
+                    }
+                } else {
+                    tempStreak = 0;
+                }
+            }
+        }
+
+        return {
+            currentStreak: currentStreak,
+            longestStreak: longestStreak
+        };
+    }
+
+    // Get all users streaks
+    async getAllStreaks() {
+        const users = await this.getAllUsers();
+        const streaks = [];
+
+        for (const userName of Object.keys(users)) {
+            const streak = await this.calculateUserStreak(userName);
+            streaks.push({
+                userName: userName,
+                currentStreak: streak.currentStreak,
+                longestStreak: streak.longestStreak
+            });
+        }
+
+        // Sort by longest streak
+        streaks.sort((a, b) => b.longestStreak - a.longestStreak);
+
+        return streaks;
+    }
+
     // Get weekly progress for user
     async getWeeklyProgress(userName) {
-        const logs = await this.getUserDailyLogs(userName, 7);
+        const logs = await this.getUserDailyLogs(userName, 30); // Get more days to be sure
         const today = new Date();
         const currentWeek = this.getWeekNumber(today);
         const weekDays = [];
-        
+
         // Get Monday of current week
         const monday = new Date(today);
         const day = monday.getDay();
         const diff = monday.getDate() - day + (day === 0 ? -6 : 1);
         monday.setDate(diff);
-        
-        // Check each day of the week
+
+        // Check each day of the week (Monday to Sunday)
+        let hasFailedDay = false;
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
             const dateString = date.toISOString().split('T')[0];
-            
+            const isCompleted = logs[dateString] !== undefined;
+            const isFuture = date > today;
+            const isPast = date < today && dateString !== this.getTodayString();
+
+            // If it's a past day and not completed, it's a failed day
+            if (isPast && !isCompleted) {
+                hasFailedDay = true;
+            }
+
             weekDays.push({
                 date: dateString,
                 dayName: date.toLocaleDateString('es-ES', { weekday: 'short' }),
-                completed: logs[dateString] !== undefined,
+                completed: isCompleted,
                 isToday: dateString === this.getTodayString(),
-                isFuture: date > today
+                isFuture: isFuture,
+                failed: isPast && !isCompleted
             });
         }
-        
+
+        const completedDays = weekDays.filter(d => d.completed).length;
+        const pastDays = weekDays.filter(d => !d.isFuture).length;
+
+        // Week is complete only if all past days (including today) are completed AND no day was failed
+        const isComplete = completedDays === 7 && !hasFailedDay;
+        const isFailed = hasFailedDay;
+
         return {
             week: currentWeek,
             days: weekDays,
-            completedDays: weekDays.filter(d => d.completed).length,
+            completedDays: completedDays,
             totalDays: 7,
-            isComplete: weekDays.filter(d => d.completed).length >= 7
+            pastDays: pastDays,
+            isComplete: isComplete,
+            isFailed: isFailed,
+            hasFailedDay: hasFailedDay
         };
     }
     
@@ -274,10 +369,11 @@ class DataService {
     async checkFreePasses(userName) {
         const user = await this.getUser(userName);
         const currentWeek = this.getWeekNumber(new Date());
-        
+
         return {
             restDayUsed: user.restDaysUsed && user.restDaysUsed[currentWeek] === true,
             cheatMealUsed: user.cheatMealsUsed && user.cheatMealsUsed[currentWeek] === true,
+            sodaPassUsed: user.sodaPassesUsed && user.sodaPassesUsed[currentWeek] === true,
             week: currentWeek
         };
     }
@@ -285,15 +381,18 @@ class DataService {
     // Update free pass usage
     async updateFreePass(userName, passType, week) {
         const user = await this.getUser(userName);
-        
+
         if (passType === 'restDay') {
             if (!user.restDaysUsed) user.restDaysUsed = {};
             user.restDaysUsed[week] = true;
         } else if (passType === 'cheatMeal') {
             if (!user.cheatMealsUsed) user.cheatMealsUsed = {};
             user.cheatMealsUsed[week] = true;
+        } else if (passType === 'sodaPass') {
+            if (!user.sodaPassesUsed) user.sodaPassesUsed = {};
+            user.sodaPassesUsed[week] = true;
         }
-        
+
         return await this.saveUser(userName, user);
     }
 }

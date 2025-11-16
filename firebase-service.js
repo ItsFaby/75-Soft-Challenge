@@ -95,36 +95,52 @@ class FirebaseService {
     // ===== Daily Logs Operations =====
     
     // Save daily log
-    async saveDailyLog(userName, date, logData) {
+    async saveDailyLog(userName, date, logData, pointsToAdd = null) {
         try {
             const batch = this.db.batch();
-            
-            // Save the daily log
+
+            // Check if log already exists (update vs create)
             const logId = `${userName}_${date}`;
             const logRef = this.db.collection(this.collections.dailyLogs).doc(logId);
+            const existingLog = await logRef.get();
+            const isUpdate = existingLog.exists;
+
+            // Save the daily log (will overwrite if exists)
             batch.set(logRef, {
                 ...logData,
                 userName: userName,
                 date: date,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
+            }, { merge: true });
+
             // Update user points and stats
             const userRef = this.db.collection(this.collections.users).doc(userName);
-            batch.update(userRef, {
-                points: firebase.firestore.FieldValue.increment(logData.pointsEarned),
-                lastActive: date,
-                'stats.totalDays': firebase.firestore.FieldValue.increment(1)
-            });
-            
-            // Check for perfect day
-            const perfectDay = Object.values(logData.activities).every(v => v);
-            if (perfectDay) {
-                batch.update(userRef, {
-                    'stats.perfectDays': firebase.firestore.FieldValue.increment(1)
-                });
+
+            // Use pointsToAdd if provided (for updates), otherwise use logData.pointsEarned (for new entries)
+            const pointsIncrement = pointsToAdd !== null ? pointsToAdd : logData.pointsEarned;
+
+            const updateData = {
+                points: firebase.firestore.FieldValue.increment(pointsIncrement),
+                lastActive: date
+            };
+
+            // Only increment totalDays if this is a new entry
+            if (!isUpdate) {
+                updateData['stats.totalDays'] = firebase.firestore.FieldValue.increment(1);
             }
-            
+
+            batch.update(userRef, updateData);
+
+            // Check for perfect day (only for new entries)
+            if (!isUpdate) {
+                const perfectDay = Object.values(logData.activities).every(v => v);
+                if (perfectDay) {
+                    batch.update(userRef, {
+                        'stats.perfectDays': firebase.firestore.FieldValue.increment(1)
+                    });
+                }
+            }
+
             await batch.commit();
             return logData;
         } catch (error) {

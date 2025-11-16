@@ -344,19 +344,19 @@ class App {
     );
 
     if (hasLogged) {
-      // User already logged
+      // User already logged - but allow editing
       if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = '✅ Ya registraste hoy';
+        submitButton.disabled = false;
+        submitButton.textContent = '🔄 Actualizar Registro del Día';
       }
 
-      // Load and show logged data
+      // Load and show logged data but keep editable
       const logs = await dataService.getUserDailyLogs(this.currentUser, 1);
       const todayLog = logs[today];
 
       if (todayLog) {
         checkboxes.forEach((cb) => {
-          cb.disabled = true;
+          cb.disabled = false; // Keep editable
           cb.checked = todayLog.activities && todayLog.activities[cb.value];
         });
 
@@ -366,22 +366,28 @@ class App {
         const sodaPass = document.getElementById('sodaPass');
 
         if (dailyBonus) {
-          dailyBonus.checked = todayLog.dailyBonus;
-          dailyBonus.disabled = true;
+          dailyBonus.checked = todayLog.dailyBonus || false;
+          dailyBonus.disabled = false; // Keep editable
         }
         if (restDay) {
-          restDay.checked = todayLog.restDay;
-          restDay.disabled = true;
+          restDay.checked = todayLog.restDay || false;
+          restDay.disabled = todayLog.restDay; // Disable only if used
         }
         if (cheatMeal) {
-          cheatMeal.checked = todayLog.cheatMeal;
-          cheatMeal.disabled = true;
+          cheatMeal.checked = todayLog.cheatMeal || false;
+          cheatMeal.disabled = todayLog.cheatMeal; // Disable only if used
         }
         if (sodaPass) {
-          sodaPass.checked = todayLog.sodaPass;
-          sodaPass.disabled = true;
+          sodaPass.checked = todayLog.sodaPass || false;
+          sodaPass.disabled = todayLog.sodaPass; // Disable only if used
         }
       }
+
+      // Check free passes status
+      await this.checkFreePasses();
+
+      // Update weekly progress
+      await this.updateWeeklyProgress();
     } else {
       // User can log
       if (submitButton) {
@@ -389,10 +395,31 @@ class App {
         submitButton.textContent = 'Registrar Día Completado 🚀';
       }
 
+      // Reset all checkboxes
       checkboxes.forEach((cb) => {
         cb.disabled = false;
         cb.checked = false;
       });
+
+      // Reset bonus and passes
+      const dailyBonus = document.getElementById('dailyBonus');
+      const restDay = document.getElementById('restDay');
+      const cheatMeal = document.getElementById('cheatMeal');
+      const sodaPass = document.getElementById('sodaPass');
+
+      if (dailyBonus) {
+        dailyBonus.checked = false;
+        dailyBonus.disabled = false;
+      }
+      if (restDay) {
+        restDay.checked = false;
+      }
+      if (cheatMeal) {
+        cheatMeal.checked = false;
+      }
+      if (sodaPass) {
+        sodaPass.checked = false;
+      }
 
       // Check free passes
       await this.checkFreePasses();
@@ -619,6 +646,17 @@ class App {
     const today = dataService.getTodayString();
     const userData = AppConfig.USERS[this.currentUser];
 
+    // Check if this is an update or new entry
+    const hasLogged = await dataService.hasLoggedToday(this.currentUser, today);
+    const isUpdate = hasLogged;
+
+    // Get previous log if updating
+    let previousLog = null;
+    if (isUpdate) {
+      const logs = await dataService.getUserDailyLogs(this.currentUser, 1);
+      previousLog = logs[today];
+    }
+
     // Get form data
     const activities = {};
     ['exercise', 'healthyFood', 'reading', 'water', 'noAlcohol'].forEach(
@@ -657,26 +695,32 @@ class App {
     };
 
     try {
-      // Save log
-      await dataService.saveDailyLog(this.currentUser, today, logData);
+      // Calculate point difference if updating
+      let pointsDifference = result.points;
+      if (isUpdate && previousLog) {
+        pointsDifference = result.points - previousLog.pointsEarned;
+      }
 
-      // Update free passes if used
+      // Save log (this will update if exists)
+      await dataService.saveDailyLog(this.currentUser, today, logData, isUpdate ? pointsDifference : result.points);
+
+      // Update free passes if used (only if not previously used)
       const currentWeek = dataService.getWeekNumber(new Date());
-      if (restDay) {
+      if (restDay && (!previousLog || !previousLog.restDay)) {
         await dataService.updateFreePass(
           this.currentUser,
           'restDay',
           currentWeek
         );
       }
-      if (cheatMeal) {
+      if (cheatMeal && (!previousLog || !previousLog.cheatMeal)) {
         await dataService.updateFreePass(
           this.currentUser,
           'cheatMeal',
           currentWeek
         );
       }
-      if (sodaPass) {
+      if (sodaPass && (!previousLog || !previousLog.sodaPass)) {
         await dataService.updateFreePass(
           this.currentUser,
           'sodaPass',
@@ -685,17 +729,27 @@ class App {
       }
 
       // Show success message
-      let message = `✅ ¡Día registrado exitosamente!<br>`;
-      message +=
-        result.points > 0
+      let message = isUpdate
+        ? `🔄 ¡Registro actualizado!<br>`
+        : `✅ ¡Día registrado exitosamente!<br>`;
+
+      if (isUpdate && pointsDifference !== 0) {
+        message += pointsDifference > 0
+          ? `${pointsDifference > 0 ? '+' : ''}${pointsDifference} puntos (ahora tienes ${result.points} puntos hoy)`
+          : `${pointsDifference} puntos (ahora tienes ${result.points} puntos hoy)`;
+      } else if (isUpdate) {
+        message += `Tienes ${result.points} puntos hoy`;
+      } else {
+        message += result.points > 0
           ? `Ganaste ${result.points} puntos 🎉`
           : `Perdiste ${Math.abs(result.points)} puntos 😔`;
+      }
 
       if (weeklyBonus) {
         message += '<br>🎊 ¡Bonus semanal completado!';
       }
 
-      this.showToast(message, result.points > 0 ? 'success' : 'warning');
+      this.showToast(message, result.points >= 0 ? 'success' : 'warning');
 
       // Reload dashboard data
       await this.loadDashboard();

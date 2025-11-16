@@ -292,7 +292,7 @@ const MockAPI = {
     },
     
     // Save daily log
-    async saveDailyLog(userName, log) {
+    async saveDailyLog(userName, log, pointsToAdd = null) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 try {
@@ -300,13 +300,20 @@ const MockAPI = {
                         reject(new Error('User not found'));
                         return;
                     }
-                    
+
                     const dateString = log.date || new Date().toISOString().split('T')[0];
+                    const isUpdate = MOCK_DATABASE.users[userName].dailyLogs[dateString] !== undefined;
+
+                    // Save the log
                     MOCK_DATABASE.users[userName].dailyLogs[dateString] = log;
-                    MOCK_DATABASE.users[userName].points += log.pointsEarned;
+
+                    // Update points: use pointsToAdd if provided (for updates), otherwise use log.pointsEarned
+                    const pointsIncrement = pointsToAdd !== null ? pointsToAdd : log.pointsEarned;
+                    MOCK_DATABASE.users[userName].points += pointsIncrement;
+
                     MOCK_DATABASE.users[userName].lastActive = dateString;
                     MOCK_DATABASE.lastUpdate = new Date().toISOString();
-                    
+
                     saveMockData();
                     resolve(log);
                 } catch (error) {

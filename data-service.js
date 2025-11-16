@@ -61,12 +61,12 @@ class DataService {
     }
     
     // ===== Daily Logs Operations =====
-    
-    async saveDailyLog(userName, date, logData) {
+
+    async saveDailyLog(userName, date, logData, pointsToAdd = null) {
         if (this.useMockData) {
-            return await MockAPI.saveDailyLog(userName, { ...logData, date });
+            return await MockAPI.saveDailyLog(userName, { ...logData, date }, pointsToAdd);
         } else {
-            return await firebaseService.saveDailyLog(userName, date, logData);
+            return await firebaseService.saveDailyLog(userName, date, logData, pointsToAdd);
         }
     }
     

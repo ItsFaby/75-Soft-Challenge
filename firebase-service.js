@@ -68,11 +68,26 @@ class FirebaseService {
     async getUser(userName) {
         try {
             const doc = await this.db.collection(this.collections.users).doc(userName).get();
-            
+
             if (doc.exists) {
                 return { id: doc.id, ...doc.data() };
             } else {
-                throw new Error('User not found');
+                // Return default user structure instead of throwing error
+                return {
+                    id: userName,
+                    name: userName,
+                    points: 0,
+                    lastActive: null,
+                    stats: {
+                        totalDays: 0,
+                        perfectDays: 0,
+                        currentStreak: 0,
+                        longestStreak: 0
+                    },
+                    restDaysUsed: {},
+                    cheatMealsUsed: {},
+                    sodaPassesUsed: {}
+                };
             }
         } catch (error) {
             console.error('Error getting user:', error);
@@ -98,7 +113,7 @@ class FirebaseService {
     async saveDailyLog(userName, date, logData) {
         try {
             const batch = this.db.batch();
-            
+
             // Save the daily log
             const logId = `${userName}_${date}`;
             const logRef = this.db.collection(this.collections.dailyLogs).doc(logId);
@@ -108,23 +123,44 @@ class FirebaseService {
                 date: date,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            // Update user points and stats
+
+            // Check if user exists first
             const userRef = this.db.collection(this.collections.users).doc(userName);
-            batch.update(userRef, {
-                points: firebase.firestore.FieldValue.increment(logData.pointsEarned),
-                lastActive: date,
-                'stats.totalDays': firebase.firestore.FieldValue.increment(1)
-            });
-            
-            // Check for perfect day
-            const perfectDay = Object.values(logData.activities).every(v => v);
-            if (perfectDay) {
-                batch.update(userRef, {
-                    'stats.perfectDays': firebase.firestore.FieldValue.increment(1)
+            const userDoc = await userRef.get();
+
+            if (!userDoc.exists) {
+                // Create user if doesn't exist
+                batch.set(userRef, {
+                    name: userName,
+                    points: logData.pointsEarned,
+                    lastActive: date,
+                    stats: {
+                        totalDays: 1,
+                        perfectDays: Object.values(logData.activities).every(v => v) ? 1 : 0,
+                        currentStreak: 0,
+                        longestStreak: 0
+                    },
+                    restDaysUsed: {},
+                    cheatMealsUsed: {},
+                    sodaPassesUsed: {}
                 });
+            } else {
+                // Update existing user
+                batch.set(userRef, {
+                    points: firebase.firestore.FieldValue.increment(logData.pointsEarned),
+                    lastActive: date,
+                    'stats.totalDays': firebase.firestore.FieldValue.increment(1)
+                }, { merge: true });
+
+                // Check for perfect day
+                const perfectDay = Object.values(logData.activities).every(v => v);
+                if (perfectDay) {
+                    batch.set(userRef, {
+                        'stats.perfectDays': firebase.firestore.FieldValue.increment(1)
+                    }, { merge: true });
+                }
             }
-            
+
             await batch.commit();
             return logData;
         } catch (error) {

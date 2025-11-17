@@ -216,6 +216,21 @@ class DataService {
         return date.toISOString().split('T')[0];
     }
 
+    // Get today's Date object (with development offset applied)
+    getTodayDate() {
+        const date = new Date();
+        // Apply development offset if DEV_MODE is enabled
+        if (AppConfig.APP_SETTINGS.DEV_MODE && AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET !== 0) {
+            date.setDate(date.getDate() + AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET);
+        }
+        return date;
+    }
+
+    // Get day of week for today (0-6, with development offset applied)
+    getTodayDayOfWeek() {
+        return this.getTodayDate().getDay();
+    }
+
     getDaysSinceChallengeStart() {
         const start = new Date(AppConfig.APP_SETTINGS.startDate);    
         const today = new Date();                 

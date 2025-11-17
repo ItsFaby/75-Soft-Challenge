@@ -23,11 +23,11 @@ const AppConfig = {
     penaltyPoints: 3,
     weeklyBonusPoints: 5,
     dailyBonusPoints: 1,
-    startDate: '2025-10-01',
-    endDate: '',
+    startDate: '2025-11-16',
+    endDate: '2026-03-02',
 
     // Development mode settings (set to true to enable dev tools)
-    DEV_MODE: true, // Set to true to show dev controls in UI
+    DEV_MODE: false, // Set to true to show dev controls in UI
     DEV_DAYS_OFFSET: 0, // Change this to advance/rewind days (only works when DEV_MODE is true)
   },
 
@@ -63,15 +63,19 @@ const AppConfig = {
   // Daily challenges rotation - GLOBAL for all users (same challenge for everyone each day)
   DAILY_CHALLENGES: [
     { text: '🏃‍♂️ Hacer 10,000 pasos', id: 'steps10k', day: 0 },
-    { text: '🧘‍♀️ 30 minutos de yoga o estiramientos', id: 'yoga', day: 1 },
+    { text: '🧘‍♀️ 10 minutos de estiramientos', id: 'yoga', day: 1 },
     {
-      text: '🥗 Preparar una comida saludable adicional',
-      id: 'healthymeal',
-      day: 2,
+      text: '🛋️ Sentarte 10 minutos en completo silencio',
+      id: 'stillness',
+      day: 3,
     },
-    { text: '🚶‍♀️ Caminar al aire libre 30 min', id: 'outdoorwalk', day: 3 },
     {
-      text: '💪 20 minutos de ejercicio adicional',
+      text: '🚶‍♀️ Caminar al aire libre al menos 10 min',
+      id: 'outdoorwalk',
+      day: 3,
+    },
+    {
+      text: '💪 10 minutos de ejercicio adicional',
       id: 'extraworkout',
       day: 4,
     },
@@ -80,7 +84,229 @@ const AppConfig = {
       id: 'extrareading',
       day: 5,
     },
-    { text: '💧 Tomar 3L de agua (1L extra)', id: 'extrawater', day: 6 },
+    { text: 'Lavar o limpiar algo olvidado', id: 'extrawater', day: 6 },
+
+    { text: '🛌 Dormir 7–8 horas', id: 'sleepwell', day: 7 },
+    {
+      text: '📵 1 hora sin pantallas antes de dormir',
+      id: 'noscreens',
+      day: 8,
+    },
+    {
+      text: '🧹 Limpiar o ordenar un espacio pequeño',
+      id: 'declutter',
+      day: 9,
+    },
+    {
+      text: '😌 10 minutos de respiración consciente',
+      id: 'breathing',
+      day: 10,
+    },
+    {
+      text: '📓 Escribir 5 cosas por las que agradeces',
+      id: 'gratitude',
+      day: 11,
+    },
+    { text: '🥦 Comer 3 porciones de vegetales', id: 'moreveggies', day: 12 },
+    { text: '🌞 Pasar 10 minutos al sol', id: 'sunlight', day: 13 },
+
+    {
+      text: '📦 Organizar una carpeta del móvil o computadora',
+      id: 'morningwater',
+      day: 14,
+    },
+    {
+      text: '🧍 Mantener postura recta 30 min consciente',
+      id: 'posture',
+      day: 15,
+    },
+    { text: '🏃‍♀️ 20 minutos de cardio ligero', id: 'lightcardio', day: 16 },
+    { text: '🎧 Escuchar un audio motivacional', id: 'plan', day: 17 },
+    {
+      text: '😁 Sonreír a 3 personas o dar 3 cumplidos',
+      id: 'positiveinteractions',
+      day: 18,
+    },
+    { text: '💭 10 minutos de reflexión personal', id: 'reflection', day: 19 },
+    {
+      text: '🚶 Hacer una caminata consciente sin música',
+      id: 'mindfulwalk',
+      day: 20,
+    },
+
+    { text: '⏳ Evitar azúcar procesada por 24h', id: 'nosugar', day: 21 },
+    { text: '💨 10 minutos de movilidad articular', id: 'mobility', day: 22 },
+    { text: '📖 Leer 20 minutos de no ficción', id: 'nonfiction', day: 23 },
+    {
+      text: '🤲 Hacer un acto de servicio pequeño',
+      id: 'lemonwater',
+      day: 24,
+    },
+    {
+      text: '🧴 Crear una mini rutina de cuidado personal',
+      id: 'selfcare',
+      day: 25,
+    },
+    {
+      text: '🧠 Practicar visualización 5 minutos',
+      id: 'visualization',
+      day: 26,
+    },
+    { text: '🍎 Comer una fruta fresca hoy', id: 'fruits', day: 27 },
+
+    {
+      text: '🚶‍♂️ Caminar 5 minutos cada hora durante el día (al menos 5 veces)',
+      id: 'movementbreaks',
+      day: 28,
+    },
+    {
+      text: '🧊 Terminar la ducha con 30s de agua fría',
+      id: 'coldshower',
+      day: 29,
+    },
+    { text: '💬 Conectar con un amigo/familiar', id: 'connect', day: 30 },
+    {
+      text: '🧘‍♂️ 15 minutos de meditación guiada',
+      id: 'guidedmeditation',
+      day: 31,
+    },
+    {
+      text: '🍽️ Comer sin pantallas en todas las comidas',
+      id: 'mindfuleating',
+      day: 32,
+    },
+    { text: '📅 Organizar la semana', id: 'organizeweek', day: 33 },
+    { text: '🌿 Pasar tiempo en la naturaleza', id: 'nature', day: 34 },
+
+    {
+      text: '🫁 Practicar respiración 4-7-8 por 5 min',
+      id: '478breathing',
+      day: 35,
+    },
+    {
+      text: '💬 Escribir una carta o mensaje de agradecimiento',
+      id: 'podcastedu',
+      day: 36,
+    },
+    { text: '🏡 Hacer una limpieza de 10 minutos', id: 'quickclean', day: 37 },
+    { text: '💫 Evitar quejas por 24h', id: 'nocomplaints', day: 38 },
+    {
+      text: '🗂️ Revisar y borrar archivos del móvil',
+      id: 'digitalclean',
+      day: 39,
+    },
+    {
+      text: '📷 Tomar una foto de algo que te inspire',
+      id: 'inspirationphoto',
+      day: 40,
+    },
+    { text: '☀️ Ver el amanecer o atardecer', id: 'nosweetdrinks', day: 41 },
+
+    { text: '🧗 Hacer 25 sentadillas', id: 'squats25', day: 42 },
+    {
+      text: '👐 20 flexiones contra pared o estándar',
+      id: 'pushups20',
+      day: 43,
+    },
+    { text: '🔥 Plancha 1 minuto total', id: 'plank1min', day: 44 },
+    { text: '🦵 30 zancadas (15 por pierna)', id: 'lunges', day: 45 },
+    { text: '📱 2 horas sin redes sociales', id: 'nosocial', day: 46 },
+    {
+      text: '🎯 Cumplir una pequeña tarea pendiente',
+      id: 'pendiente',
+      day: 47,
+    },
+    {
+      text: '💆 Practicar autocuidado emocional 10 min',
+      id: 'emotionalcare',
+      day: 48,
+    },
+
+    {
+      text: '🌸 Dedicar 10 minutos a un hobby creativo',
+      id: 'nocaffeinepm',
+      day: 49,
+    },
+    { text: '📒 Escribir 1 página de diario', id: 'journaling', day: 50 },
+    { text: '🥕 Añadir un snack saludable', id: 'healthysnack', day: 51 },
+    {
+      text: '💨 Respiración diafragmática 5 min',
+      id: 'diaphragmatic',
+      day: 52,
+    },
+    {
+      text: '🚶 Caminar 20 min después de una comida',
+      id: 'postmealwalk',
+      day: 53,
+    },
+    { text: '🛏️ Ordenar tu cama antes de las 2pm', id: 'makebed', day: 54 },
+    {
+      text: '🔄 Evitar multitasking durante el día',
+      id: 'nomultitask',
+      day: 55,
+    },
+
+    {
+      text: '😊 Practicar afirmaciones positivas 5 min',
+      id: 'affirmations',
+      day: 56,
+    },
+    {
+      text: '📓 Escribir una lista de objetivos semanales',
+      id: 'hiddenarea',
+      day: 57,
+    },
+    { text: '🧠 Aprender algo nuevo en 10 min', id: 'learn', day: 58 },
+    { text: '🙏 Hacer 5 min de silencio total', id: 'silence', day: 59 },
+    { text: '🔌 1 comida sin teléfono cerca', id: 'phonelessmeal', day: 60 },
+    {
+      text: '👣 Caminar 20 min con atención a la respiración',
+      id: 'breathwalk',
+      day: 61,
+    },
+    { text: '📚 Leer 10 páginas de ficción', id: 'fiction', day: 62 },
+
+    { text: '🧴 Hacer una mascarilla natural casera', id: 'skincare', day: 63 },
+    {
+      text: '🌬️ 10 min de estiramientos de pecho y espalda',
+      id: 'backstretch',
+      day: 64,
+    },
+    {
+      text: '🫀 Subir 10 tramos de escaleras durante el día',
+      id: 'stairs',
+      day: 65,
+    },
+    {
+      text: '🗃️ Depurar tu bandeja de entrada 10 minutos',
+      id: 'emailclean',
+      day: 66,
+    },
+    { text: '💓 Hacer algo amable por alguien', id: 'kindness', day: 67 },
+    {
+      text: '🌿 5 min de grounding (pies en el suelo)',
+      id: 'grounding',
+      day: 68,
+    },
+    { text: '🍽️ Comer lentamente toda la jornada', id: 'slowfood', day: 69 },
+
+    {
+      text: '📝 Establecer una meta pequeña del mes',
+      id: 'smallgoal',
+      day: 70,
+    },
+    {
+      text: '📦 Eliminar 5 objetos que no necesitas',
+      id: 'declutter5',
+      day: 71,
+    },
+    { text: '🎶 Escuchar música relajante 15 min', id: 'relaxmusic', day: 72 },
+    { text: '🕺 Bailar 10 minutos', id: 'dance', day: 73 },
+    {
+      text: '🌟 Dar un review de que tal fue el proceso de todo el desafío',
+      id: 'review',
+      day: 74,
+    },
   ],
 
   // Activities list

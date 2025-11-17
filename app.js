@@ -317,7 +317,7 @@ class App {
 
   // Load daily check
   async loadDailyCheck() {
-    // Update date display
+    // Update date display - use the date with offset applied
     const dateDisplay = document.getElementById('dateDisplay');
     if (dateDisplay) {
       const options = {
@@ -326,12 +326,13 @@ class App {
         month: 'long',
         day: 'numeric',
       };
-      const today = new Date().toLocaleDateString('es-ES', options);
+      const today = dataService.getTodayDate().toLocaleDateString('es-ES', options);
       dateDisplay.textContent = `📅 ${today}`;
     }
 
     // Update daily challenge - GLOBAL (same for everyone)
-    const dayIndex = new Date().getDay();
+    // Use getTodayDayOfWeek() to apply development offset
+    const dayIndex = dataService.getTodayDayOfWeek();
     const challenge = AppConfig.DAILY_CHALLENGES[dayIndex];
     const label = document.getElementById('dailyBonusLabel');
     if (label && challenge) {
@@ -427,6 +428,19 @@ class App {
         cb.checked = false;
       });
 
+      // Reset bonus checkboxes
+      const dailyBonus = document.getElementById('dailyBonus');
+      const weeklyBonus = document.getElementById('weeklyBonus');
+
+      if (dailyBonus) {
+        dailyBonus.checked = false;
+        dailyBonus.disabled = false;
+      }
+      if (weeklyBonus) {
+        weeklyBonus.checked = false;
+        weeklyBonus.disabled = true; // Will be enabled if week is complete
+      }
+
       // Check free passes
       await this.checkFreePasses();
 
@@ -442,6 +456,8 @@ class App {
   async checkFreePasses() {
     if (!this.currentUser) return;
 
+    const today = dataService.getTodayString();
+    const hasLogged = await dataService.hasLoggedToday(this.currentUser, today);
     const passes = await dataService.checkFreePasses(this.currentUser);
     const restDay = document.getElementById('restDay');
     const cheatMeal = document.getElementById('cheatMeal');
@@ -452,15 +468,24 @@ class App {
 
     if (restDay) {
       restDay.disabled = passes.restDayUsed;
-      restDay.checked = false;
+      // Only keep checked if user already logged today and it was in their log
+      if (!hasLogged) {
+        restDay.checked = false;
+      }
     }
     if (cheatMeal) {
       cheatMeal.disabled = passes.cheatMealUsed;
-      cheatMeal.checked = false;
+      // Only keep checked if user already logged today and it was in their log
+      if (!hasLogged) {
+        cheatMeal.checked = false;
+      }
     }
     if (sodaPass) {
       sodaPass.disabled = passes.sodaPassUsed;
-      sodaPass.checked = false;
+      // Only keep checked if user already logged today and it was in their log
+      if (!hasLogged) {
+        sodaPass.checked = false;
+      }
     }
     if (restDayCount) {
       restDayCount.textContent = passes.restDayUsed
@@ -878,6 +903,34 @@ class App {
       cb.disabled = true;
     });
 
+    // Reset bonus checkboxes
+    const dailyBonus = document.getElementById('dailyBonus');
+    const weeklyBonus = document.getElementById('weeklyBonus');
+    const restDay = document.getElementById('restDay');
+    const cheatMeal = document.getElementById('cheatMeal');
+    const sodaPass = document.getElementById('sodaPass');
+
+    if (dailyBonus) {
+      dailyBonus.checked = false;
+      dailyBonus.disabled = true;
+    }
+    if (weeklyBonus) {
+      weeklyBonus.checked = false;
+      weeklyBonus.disabled = true;
+    }
+    if (restDay) {
+      restDay.checked = false;
+      restDay.disabled = true;
+    }
+    if (cheatMeal) {
+      cheatMeal.checked = false;
+      cheatMeal.disabled = true;
+    }
+    if (sodaPass) {
+      sodaPass.checked = false;
+      sodaPass.disabled = true;
+    }
+
     const submitButton = document.getElementById('submitDaily');
     if (submitButton) {
       submitButton.disabled = true;
@@ -983,13 +1036,14 @@ class App {
           await this.loadDashboard();
           break;
         case 'daily':
-          await this.checkUserStatus();
+          // Reload the entire daily check to update date, bonus challenge, etc.
+          await this.loadDailyCheck();
           break;
         case 'analytics':
           await this.loadAnalytics();
           break;
         case 'history':
-          await this.loadHistory();
+          await this.updateHistory();
           break;
       }
     }

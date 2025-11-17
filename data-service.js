@@ -400,10 +400,14 @@ class DataService {
 
     // Get weekly progress for user
     async getWeeklyProgress(userName) {
+        console.log(`📈 [TRACKING] Calculando progreso semanal para ${userName}`);
+
         const logs = await this.getUserDailyLogs(userName, 30); // Get more days to be sure
         const today = new Date();
         const currentWeek = this.getWeekNumber(today);
         const weekDays = [];
+
+        console.log(`📅 [TRACKING] Semana actual: ${currentWeek}`);
 
         // Get Monday of current week
         const monday = new Date(today);
@@ -463,6 +467,14 @@ class DataService {
         const isComplete = perfectDaysCount === 7 && !hasFailedDay;
         const isFailed = hasFailedDay;
 
+        console.log(`📊 [TRACKING] Progreso semanal:`, {
+            completedDays: `${completedDays}/7`,
+            perfectDays: `${perfectDaysCount}/7`,
+            pastDays: `${pastDays}/7`,
+            isComplete: isComplete ? '✅ Semana completa' : '⏳ En progreso',
+            isFailed: isFailed ? '❌ Semana fallada' : '✅ Sin fallos'
+        });
+
         return {
             week: currentWeek,
             days: weekDays,
@@ -481,27 +493,79 @@ class DataService {
         const user = await this.getUser(userName);
         const currentWeek = this.getWeekNumber(new Date());
 
-        return {
+        console.log(`📊 [TRACKING] Verificando pases semanales para ${userName}`);
+        console.log(`📅 [TRACKING] Semana actual: ${currentWeek}`);
+
+        // Reset old weekly passes (cleanup old weeks to save memory and avoid confusion)
+        let passesResetted = false;
+
+        if (user.restDaysUsed) {
+            const oldWeeks = Object.keys(user.restDaysUsed).filter(week => week !== currentWeek);
+            if (oldWeeks.length > 0) {
+                console.log(`🧹 [TRACKING] Limpiando pases de descanso de semanas anteriores: ${oldWeeks.join(', ')}`);
+                oldWeeks.forEach(week => delete user.restDaysUsed[week]);
+                passesResetted = true;
+            }
+        }
+
+        if (user.cheatMealsUsed) {
+            const oldWeeks = Object.keys(user.cheatMealsUsed).filter(week => week !== currentWeek);
+            if (oldWeeks.length > 0) {
+                console.log(`🧹 [TRACKING] Limpiando pases de cheat meal de semanas anteriores: ${oldWeeks.join(', ')}`);
+                oldWeeks.forEach(week => delete user.cheatMealsUsed[week]);
+                passesResetted = true;
+            }
+        }
+
+        if (user.sodaPassesUsed) {
+            const oldWeeks = Object.keys(user.sodaPassesUsed).filter(week => week !== currentWeek);
+            if (oldWeeks.length > 0) {
+                console.log(`🧹 [TRACKING] Limpiando pases de bebida de semanas anteriores: ${oldWeeks.join(', ')}`);
+                oldWeeks.forEach(week => delete user.sodaPassesUsed[week]);
+                passesResetted = true;
+            }
+        }
+
+        // Save user if passes were resetted
+        if (passesResetted) {
+            await this.saveUser(userName, user);
+            console.log(`✅ [TRACKING] Pases de semanas anteriores limpiados y guardados`);
+        }
+
+        const result = {
             restDayUsed: user.restDaysUsed && user.restDaysUsed[currentWeek] === true,
             cheatMealUsed: user.cheatMealsUsed && user.cheatMealsUsed[currentWeek] === true,
             sodaPassUsed: user.sodaPassesUsed && user.sodaPassesUsed[currentWeek] === true,
             week: currentWeek
         };
+
+        console.log(`📋 [TRACKING] Estado de pases para semana ${currentWeek}:`, {
+            restDay: result.restDayUsed ? '❌ Usado' : '✅ Disponible',
+            cheatMeal: result.cheatMealUsed ? '❌ Usado' : '✅ Disponible',
+            sodaPass: result.sodaPassUsed ? '❌ Usado' : '✅ Disponible'
+        });
+
+        return result;
     }
     
     // Update free pass usage
     async updateFreePass(userName, passType, week) {
         const user = await this.getUser(userName);
 
+        console.log(`🎫 [TRACKING] Marcando pase como usado: ${passType} para ${userName} en semana ${week}`);
+
         if (passType === 'restDay') {
             if (!user.restDaysUsed) user.restDaysUsed = {};
             user.restDaysUsed[week] = true;
+            console.log(`✅ [TRACKING] Día de descanso marcado como usado en semana ${week}`);
         } else if (passType === 'cheatMeal') {
             if (!user.cheatMealsUsed) user.cheatMealsUsed = {};
             user.cheatMealsUsed[week] = true;
+            console.log(`✅ [TRACKING] Cheat meal marcado como usado en semana ${week}`);
         } else if (passType === 'sodaPass') {
             if (!user.sodaPassesUsed) user.sodaPassesUsed = {};
             user.sodaPassesUsed[week] = true;
+            console.log(`✅ [TRACKING] Bebida permitida marcada como usada en semana ${week}`);
         }
 
         return await this.saveUser(userName, user);

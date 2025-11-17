@@ -456,6 +456,8 @@ class App {
   async checkFreePasses() {
     if (!this.currentUser) return;
 
+    console.log(`🎫 [UI] Verificando y actualizando pases semanales en la interfaz...`);
+
     const today = dataService.getTodayString();
     const hasLogged = await dataService.hasLoggedToday(this.currentUser, today);
     const passes = await dataService.checkFreePasses(this.currentUser);
@@ -472,6 +474,7 @@ class App {
       if (!hasLogged) {
         restDay.checked = false;
       }
+      console.log(`   Día de descanso: ${passes.restDayUsed ? '❌ Usado' : '✅ Disponible'}`);
     }
     if (cheatMeal) {
       cheatMeal.disabled = passes.cheatMealUsed;
@@ -479,6 +482,7 @@ class App {
       if (!hasLogged) {
         cheatMeal.checked = false;
       }
+      console.log(`   Cheat meal: ${passes.cheatMealUsed ? '❌ Usado' : '✅ Disponible'}`);
     }
     if (sodaPass) {
       sodaPass.disabled = passes.sodaPassUsed;
@@ -486,6 +490,7 @@ class App {
       if (!hasLogged) {
         sodaPass.checked = false;
       }
+      console.log(`   Bebida permitida: ${passes.sodaPassUsed ? '❌ Usado' : '✅ Disponible'}`);
     }
     if (restDayCount) {
       restDayCount.textContent = passes.restDayUsed
@@ -621,6 +626,8 @@ class App {
   async updateWeeklyProgress() {
     if (!this.currentUser) return;
 
+    console.log(`🔄 [UI] Actualizando progreso semanal para ${this.currentUser} en la interfaz...`);
+
     const progress = await dataService.getWeeklyProgress(this.currentUser);
     const container = document.getElementById('weeklyProgress');
 
@@ -641,10 +648,13 @@ class App {
 
       // Show status message
       if (progress.isFailed) {
+        console.log(`❌ [UI] Objetivo semanal perdido (${progress.perfectDays}/7 días perfectos)`);
         html += `<small style="color: #dc3545;">❌ Objetivo semanal perdido - Faltó completar un día perfecto (${progress.perfectDays}/7 días perfectos)</small>`;
       } else if (progress.isComplete) {
+        console.log(`✅ [UI] ¡Semana perfecta completada! (7/7 días perfectos)`);
         html += `<small style="color: #28a745;">✅ ¡Semana perfecta completada! +5 puntos al registrar el domingo (7/7 días perfectos)</small>`;
       } else {
+        console.log(`⏳ [UI] Progreso semanal: ${progress.perfectDays}/7 días perfectos`);
         html += `<small>${progress.perfectDays}/7 días perfectos esta semana (Lunes-Domingo, sin contar bonus diario)</small>`;
       }
 
@@ -895,6 +905,8 @@ class App {
 
   // Reset daily form
   resetDailyForm() {
+    console.log(`🔄 [UI] Reseteando formulario diario...`);
+
     const checkboxes = document.querySelectorAll(
       '.checklist input[type="checkbox"]'
     );
@@ -931,11 +943,22 @@ class App {
       sodaPass.disabled = true;
     }
 
+    // Reset pass counters
+    const restDayCount = document.getElementById('restDayCount');
+    const cheatMealCount = document.getElementById('cheatMealCount');
+    const sodaPassCount = document.getElementById('sodaPassCount');
+
+    if (restDayCount) restDayCount.textContent = '1 disponible';
+    if (cheatMealCount) cheatMealCount.textContent = '1 disponible';
+    if (sodaPassCount) sodaPassCount.textContent = '1 disponible';
+
     const submitButton = document.getElementById('submitDaily');
     if (submitButton) {
       submitButton.disabled = true;
       submitButton.textContent = 'Selecciona un usuario';
     }
+
+    console.log(`✅ [UI] Formulario reseteado correctamente`);
   }
 
   // Setup real-time updates
@@ -991,7 +1014,28 @@ class App {
       return;
     }
 
+    // Get week before advancing
+    const beforeDate = dataService.getTodayDate();
+    const weekBefore = dataService.getWeekNumber(beforeDate);
+
+    console.log(`⏭️ [DEV MODE] Avanzando ${days} día(s)...`);
+    console.log(`📅 [DEV MODE] Semana antes de avanzar: ${weekBefore}`);
+
     AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET += days;
+
+    // Get week after advancing
+    const afterDate = dataService.getTodayDate();
+    const weekAfter = dataService.getWeekNumber(afterDate);
+
+    console.log(`📅 [DEV MODE] Semana después de avanzar: ${weekAfter}`);
+
+    // Check if week changed
+    if (weekBefore !== weekAfter) {
+      console.log(`🔄 [DEV MODE] ¡CAMBIO DE SEMANA DETECTADO!`);
+      console.log(`   Semana anterior: ${weekBefore}`);
+      console.log(`   Semana nueva: ${weekAfter}`);
+      console.log(`   ℹ️ Los pases semanales se resetearán automáticamente al verificar el estado del usuario`);
+    }
 
     // Update UI
     const offsetDisplay = document.getElementById('devDaysOffset');
@@ -999,7 +1043,12 @@ class App {
       offsetDisplay.textContent = AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET;
     }
 
-    this.showToast(`Días avanzados: ${days > 0 ? '+' : ''}${days} (Total: ${AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET})`, 'info');
+    let message = `Días avanzados: ${days > 0 ? '+' : ''}${days} (Total: ${AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET})`;
+    if (weekBefore !== weekAfter) {
+      message += `<br>🔄 ¡Nueva semana! ${weekBefore} → ${weekAfter}`;
+    }
+
+    this.showToast(message, 'info');
 
     // Reload current view
     this.loadCurrentView();

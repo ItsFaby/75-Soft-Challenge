@@ -269,30 +269,50 @@ class DataService {
         return { points, breakdown };
     }
     
-    // Check if week is complete for user
+    // Check if week is complete for user (all 7 days perfect)
     async isWeekComplete(userName) {
-        const logs = await this.getUserDailyLogs(userName, 7);
-        const currentWeek = this.getWeekNumber(new Date());
-        let daysInWeek = 0;
-        
-        Object.entries(logs).forEach(([date, log]) => {
-            const logWeek = this.getWeekNumber(new Date(date));
-            if (logWeek === currentWeek) {
-                daysInWeek++;
+        const progress = await this.getWeeklyProgress(userName);
+        // Week is complete only if all 7 days are perfect
+        return progress.isComplete && progress.perfectDays === 7;
+    }
+
+    // Check if week will be complete with today's activities (used when submitting daily log)
+    async isWeekCompleteWithToday(userName, todayActivities) {
+        const progress = await this.getWeeklyProgress(userName);
+        const today = this.getTodayString();
+
+        // Check if all today's activities are completed (perfect day)
+        const isTodayPerfect = Object.values(todayActivities).every(v => v === true);
+
+        if (!isTodayPerfect) {
+            return false; // If today is not perfect, can't complete the week
+        }
+
+        // Count perfect days excluding today (in case we're updating an existing log)
+        let perfectDaysExcludingToday = 0;
+        for (const day of progress.days) {
+            if (day.date !== today && day.perfect) {
+                perfectDaysExcludingToday++;
             }
-        });
-        
-        return daysInWeek >= 7;
+        }
+
+        // Week is complete if we have 6 perfect days already + today's perfect day = 7
+        return perfectDaysExcludingToday === 6;
     }
     
-    // Calculate user streaks
+    // Calculate user streaks (only count perfect days - all base activities completed)
     async calculateUserStreak(userName) {
         const logs = await this.getUserDailyLogs(userName, 100); // Get many days
-        const dates = Object.keys(logs).sort().reverse(); // Most recent first
 
         let currentStreak = 0;
         let longestStreak = 0;
         let tempStreak = 0;
+
+        // Helper function to check if a day is perfect
+        const isPerfectDay = (dayLog) => {
+            if (!dayLog || !dayLog.activities) return false;
+            return Object.values(dayLog.activities).every(v => v === true);
+        };
 
         // Calculate current streak (from today backwards)
         const today = this.getTodayString();
@@ -302,10 +322,12 @@ class DataService {
             const checkDate = new Date(todayDate);
             checkDate.setDate(checkDate.getDate() - i);
             const dateString = checkDate.toISOString().split('T')[0];
+            const dayLog = logs[dateString];
 
-            if (logs[dateString]) {
+            if (isPerfectDay(dayLog)) {
                 currentStreak++;
             } else {
+                // Break streak if day is not perfect OR if it's today/future (not yet completed)
                 break;
             }
         }
@@ -322,8 +344,9 @@ class DataService {
                 const checkDate = new Date(startDate);
                 checkDate.setDate(checkDate.getDate() + i);
                 const dateString = checkDate.toISOString().split('T')[0];
+                const dayLog = logs[dateString];
 
-                if (logs[dateString]) {
+                if (isPerfectDay(dayLog)) {
                     tempStreak++;
                     if (tempStreak > longestStreak) {
                         longestStreak = tempStreak;
@@ -375,40 +398,56 @@ class DataService {
 
         // Check each day of the week (Monday to Sunday)
         let hasFailedDay = false;
+        let perfectDaysCount = 0;
+
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
             const dateString = date.toISOString().split('T')[0];
-            const isCompleted = logs[dateString] !== undefined;
+            const dayLog = logs[dateString];
             const isFuture = date > today;
             const isPast = date < today && dateString !== this.getTodayString();
 
-            // If it's a past day and not completed, it's a failed day
-            if (isPast && !isCompleted) {
+            // Check if day is perfect (all base activities completed, ignoring dailyBonus)
+            let isPerfectDay = false;
+            if (dayLog && dayLog.activities) {
+                isPerfectDay = Object.values(dayLog.activities).every(v => v === true);
+            }
+
+            const isCompleted = dayLog !== undefined;
+
+            // If it's a past day and not perfect, it's a failed day
+            if (isPast && !isPerfectDay) {
                 hasFailedDay = true;
+            }
+
+            if (isPerfectDay) {
+                perfectDaysCount++;
             }
 
             weekDays.push({
                 date: dateString,
                 dayName: date.toLocaleDateString('es-ES', { weekday: 'short' }),
                 completed: isCompleted,
+                perfect: isPerfectDay,
                 isToday: dateString === this.getTodayString(),
                 isFuture: isFuture,
-                failed: isPast && !isCompleted
+                failed: isPast && !isPerfectDay
             });
         }
 
         const completedDays = weekDays.filter(d => d.completed).length;
         const pastDays = weekDays.filter(d => !d.isFuture).length;
 
-        // Week is complete only if all past days (including today) are completed AND no day was failed
-        const isComplete = completedDays === 7 && !hasFailedDay;
+        // Week is complete only if all 7 days are perfect AND no day was failed
+        const isComplete = perfectDaysCount === 7 && !hasFailedDay;
         const isFailed = hasFailedDay;
 
         return {
             week: currentWeek,
             days: weekDays,
             completedDays: completedDays,
+            perfectDays: perfectDaysCount,
             totalDays: 7,
             pastDays: pastDays,
             isComplete: isComplete,

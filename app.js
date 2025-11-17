@@ -330,17 +330,12 @@ class App {
       dateDisplay.textContent = `📅 ${today}`;
     }
 
-    // Update daily challenge - now personalized per user
-    if (this.currentUser) {
-      const dayIndex = new Date().getDay();
-      const userChallenges = AppConfig.DAILY_CHALLENGES[this.currentUser];
-      const challenge = userChallenges ? userChallenges[dayIndex] : null;
-      const label = document.getElementById('dailyBonusLabel');
-      if (label && challenge) {
-        label.textContent = challenge.text;
-      } else if (label) {
-        label.textContent = 'Selecciona tu usuario para ver tu reto personal';
-      }
+    // Update daily challenge - GLOBAL (same for everyone)
+    const dayIndex = new Date().getDay();
+    const challenge = AppConfig.DAILY_CHALLENGES[dayIndex];
+    const label = document.getElementById('dailyBonusLabel');
+    if (label && challenge) {
+      label.textContent = challenge.text;
     }
 
     // Check current user
@@ -621,11 +616,11 @@ class App {
 
       // Show status message
       if (progress.isFailed) {
-        html += `<small style="color: #dc3545;">❌ Objetivo semanal perdido - Faltó un día (${progress.completedDays}/7)</small>`;
+        html += `<small style="color: #dc3545;">❌ Objetivo semanal perdido - Faltó completar un día perfecto (${progress.perfectDays}/7 días perfectos)</small>`;
       } else if (progress.isComplete) {
-        html += `<small style="color: #28a745;">✅ ¡Semana perfecta completada! (7/7)</small>`;
+        html += `<small style="color: #28a745;">✅ ¡Semana perfecta completada! +5 puntos al registrar el domingo (7/7 días perfectos)</small>`;
       } else {
-        html += `<small>${progress.completedDays}/7 días completados esta semana (Lunes-Domingo)</small>`;
+        html += `<small>${progress.perfectDays}/7 días perfectos esta semana (Lunes-Domingo, sin contar bonus diario)</small>`;
       }
 
       container.innerHTML = html;
@@ -671,8 +666,11 @@ class App {
     const cheatMeal = document.getElementById('cheatMeal')?.checked || false;
     const sodaPass = document.getElementById('sodaPass')?.checked || false;
 
-    // Check weekly bonus
-    const weeklyBonus = await dataService.isWeekComplete(this.currentUser);
+    // Check if today will complete a perfect week (including today's activities)
+    const weeklyBonus = await dataService.isWeekCompleteWithToday(
+      this.currentUser,
+      activities
+    );
 
     // Calculate points
     const result = dataService.calculatePoints(
@@ -730,7 +728,7 @@ class App {
           : `Perdiste ${Math.abs(result.points)} puntos 😔`;
 
       if (weeklyBonus) {
-        message += '<br>🎊 ¡Bonus semanal completado!';
+        message += '<br>🎊 ¡Bonus semanal completado! +5 puntos por semana perfecta';
       }
 
       this.showToast(message, result.points > 0 ? 'success' : 'warning');

@@ -117,6 +117,12 @@ class FirebaseService {
             // Save the daily log
             const logId = `${userName}_${date}`;
             const logRef = this.db.collection(this.collections.dailyLogs).doc(logId);
+
+            // Check if this log already exists (updating same day)
+            const existingLogDoc = await logRef.get();
+            const isUpdate = existingLogDoc.exists;
+            const previousLogData = isUpdate ? existingLogDoc.data() : null;
+
             batch.set(logRef, {
                 ...logData,
                 userName: userName,
@@ -145,20 +151,51 @@ class FirebaseService {
                     sodaPassesUsed: {}
                 });
             } else {
-                // Update existing user
-                batch.set(userRef, {
-                    points: firebase.firestore.FieldValue.increment(logData.pointsEarned),
-                    lastActive: date,
-                    'stats.totalDays': firebase.firestore.FieldValue.increment(1)
-                }, { merge: true });
+                // Calculate the point difference
+                let pointsDifference = logData.pointsEarned;
+                let totalDaysIncrement = 1;
+                let perfectDaysIncrement = 0;
 
-                // Check for perfect day
-                const perfectDay = Object.values(logData.activities).every(v => v);
-                if (perfectDay) {
-                    batch.set(userRef, {
-                        'stats.perfectDays': firebase.firestore.FieldValue.increment(1)
-                    }, { merge: true });
+                if (isUpdate && previousLogData) {
+                    // If updating, only increment the difference
+                    pointsDifference = logData.pointsEarned - (previousLogData.pointsEarned || 0);
+                    totalDaysIncrement = 0; // Don't increment totalDays again
+
+                    // Calculate perfect days difference
+                    const wasPerfect = previousLogData.activities && Object.values(previousLogData.activities).every(v => v);
+                    const isPerfect = Object.values(logData.activities).every(v => v);
+
+                    if (isPerfect && !wasPerfect) {
+                        perfectDaysIncrement = 1;
+                    } else if (!isPerfect && wasPerfect) {
+                        perfectDaysIncrement = -1;
+                    }
+                } else {
+                    // New entry
+                    const isPerfect = Object.values(logData.activities).every(v => v);
+                    if (isPerfect) {
+                        perfectDaysIncrement = 1;
+                    }
                 }
+
+                // Update user with calculated differences
+                const updateData = {
+                    lastActive: date
+                };
+
+                if (pointsDifference !== 0) {
+                    updateData.points = firebase.firestore.FieldValue.increment(pointsDifference);
+                }
+
+                if (totalDaysIncrement !== 0) {
+                    updateData['stats.totalDays'] = firebase.firestore.FieldValue.increment(totalDaysIncrement);
+                }
+
+                if (perfectDaysIncrement !== 0) {
+                    updateData['stats.perfectDays'] = firebase.firestore.FieldValue.increment(perfectDaysIncrement);
+                }
+
+                batch.set(userRef, updateData, { merge: true });
             }
 
             await batch.commit();

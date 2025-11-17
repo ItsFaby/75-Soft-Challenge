@@ -416,8 +416,13 @@ class DataService {
 
             const isCompleted = dayLog !== undefined;
 
-            // If it's a past day and not perfect, it's a failed day
-            if (isPast && !isPerfectDay) {
+            // A day is failed ONLY if:
+            // 1. It's a past day (not today or future)
+            // 2. It was completed (has a log)
+            // 3. It was NOT perfect
+            const isFailed = isPast && isCompleted && !isPerfectDay;
+
+            if (isFailed) {
                 hasFailedDay = true;
             }
 
@@ -432,7 +437,7 @@ class DataService {
                 perfect: isPerfectDay,
                 isToday: dateString === this.getTodayString(),
                 isFuture: isFuture,
-                failed: isPast && !isPerfectDay
+                failed: isFailed
             });
         }
 

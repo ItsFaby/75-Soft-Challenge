@@ -203,7 +203,8 @@ class App {
     podium.innerHTML = '';
 
     if (leaderboard.length === 0) {
-      podium.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay participantes aún. ¡Sé el primero en registrar tu progreso!</p>';
+      podium.innerHTML =
+        '<p style="text-align: center; color: #666; padding: 20px;">No hay participantes aún. ¡Sé el primero en registrar tu progreso!</p>';
       return;
     }
 
@@ -258,12 +259,18 @@ class App {
             </div>
             <div class="stat-card">
                 <h3>👑 Líder Actual</h3>
-                <div class="stat-value">${leader ? leader.name : 'Sin líder'}</div>
-                <div class="stat-label">${leader ? leader.points + ' puntos' : 'Comienza a participar'}</div>
+                <div class="stat-value">${
+                  leader ? leader.name : 'Sin líder'
+                }</div>
+                <div class="stat-label">${
+                  leader ? leader.points + ' puntos' : 'Comienza a participar'
+                }</div>
             </div>
             <div class="stat-card">
                 <h3>💰 Premio</h3>
-                <div class="stat-value">$${AppConfig.APP_SETTINGS.prizeAmount}</div>
+                <div class="stat-value">$${
+                  AppConfig.APP_SETTINGS.prizeAmount
+                }</div>
                 <div class="stat-label">para el ganador</div>
             </div>
         `;
@@ -277,19 +284,23 @@ class App {
     const streaks = await dataService.getAllStreaks();
 
     if (streaks.length === 0) {
-      streaksGrid.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay rachas registradas aún. ¡Comienza tu racha hoy!</p>';
+      streaksGrid.innerHTML =
+        '<p style="text-align: center; color: #666; padding: 20px;">No hay rachas registradas aún. ¡Comienza tu racha hoy!</p>';
       return;
     }
 
     // Find the longest streak holder
-    const longestStreakHolder = streaks.reduce((max, user) =>
-      user.longestStreak > max.longestStreak ? user : max
-    , streaks[0]);
+    const longestStreakHolder = streaks.reduce(
+      (max, user) => (user.longestStreak > max.longestStreak ? user : max),
+      streaks[0]
+    );
 
     let html = '<div class="streaks-list">';
 
     streaks.forEach((user, index) => {
-      const isLongestStreak = user.longestStreak === longestStreakHolder.longestStreak && user.longestStreak > 0;
+      const isLongestStreak =
+        user.longestStreak === longestStreakHolder.longestStreak &&
+        user.longestStreak > 0;
       const streakClass = isLongestStreak ? 'longest-streak' : '';
 
       html += `
@@ -326,7 +337,9 @@ class App {
         month: 'long',
         day: 'numeric',
       };
-      const today = dataService.getTodayDate().toLocaleDateString('es-ES', options);
+      const today = dataService
+        .getTodayDate()
+        .toLocaleDateString('es-ES', options);
       dateDisplay.textContent = `📅 ${today}`;
     }
 
@@ -363,6 +376,7 @@ class App {
 
     const userData = AppConfig.USERS[this.currentUser];
     const today = dataService.getTodayString();
+    console.log(today);
 
     // Check if already logged today
     const hasLogged = await dataService.hasLoggedToday(this.currentUser, today);
@@ -456,7 +470,9 @@ class App {
   async checkFreePasses() {
     if (!this.currentUser) return;
 
-    console.log(`🎫 [UI] Verificando y actualizando pases semanales en la interfaz...`);
+    console.log(
+      `🎫 [UI] Verificando y actualizando pases semanales en la interfaz...`
+    );
 
     const today = dataService.getTodayString();
     const hasLogged = await dataService.hasLoggedToday(this.currentUser, today);
@@ -474,7 +490,11 @@ class App {
       if (!hasLogged) {
         restDay.checked = false;
       }
-      console.log(`   Día de descanso: ${passes.restDayUsed ? '❌ Usado' : '✅ Disponible'}`);
+      console.log(
+        `   Día de descanso: ${
+          passes.restDayUsed ? '❌ Usado' : '✅ Disponible'
+        }`
+      );
     }
     if (cheatMeal) {
       cheatMeal.disabled = passes.cheatMealUsed;
@@ -482,7 +502,9 @@ class App {
       if (!hasLogged) {
         cheatMeal.checked = false;
       }
-      console.log(`   Cheat meal: ${passes.cheatMealUsed ? '❌ Usado' : '✅ Disponible'}`);
+      console.log(
+        `   Cheat meal: ${passes.cheatMealUsed ? '❌ Usado' : '✅ Disponible'}`
+      );
     }
     if (sodaPass) {
       sodaPass.disabled = passes.sodaPassUsed;
@@ -490,7 +512,11 @@ class App {
       if (!hasLogged) {
         sodaPass.checked = false;
       }
-      console.log(`   Bebida permitida: ${passes.sodaPassUsed ? '❌ Usado' : '✅ Disponible'}`);
+      console.log(
+        `   Bebida permitida: ${
+          passes.sodaPassUsed ? '❌ Usado' : '✅ Disponible'
+        }`
+      );
     }
     if (restDayCount) {
       restDayCount.textContent = passes.restDayUsed
@@ -626,7 +652,9 @@ class App {
   async updateWeeklyProgress() {
     if (!this.currentUser) return;
 
-    console.log(`🔄 [UI] Actualizando progreso semanal para ${this.currentUser} en la interfaz...`);
+    console.log(
+      `🔄 [UI] Actualizando progreso semanal para ${this.currentUser} en la interfaz...`
+    );
 
     const progress = await dataService.getWeeklyProgress(this.currentUser);
     const container = document.getElementById('weeklyProgress');
@@ -648,13 +676,19 @@ class App {
 
       // Show status message
       if (progress.isFailed) {
-        console.log(`❌ [UI] Objetivo semanal perdido (${progress.perfectDays}/7 días perfectos)`);
+        console.log(
+          `❌ [UI] Objetivo semanal perdido (${progress.perfectDays}/7 días perfectos)`
+        );
         html += `<small style="color: #dc3545;">❌ Objetivo semanal perdido - Faltó completar un día perfecto (${progress.perfectDays}/7 días perfectos)</small>`;
       } else if (progress.isComplete) {
-        console.log(`✅ [UI] ¡Semana perfecta completada! (7/7 días perfectos)`);
+        console.log(
+          `✅ [UI] ¡Semana perfecta completada! (7/7 días perfectos)`
+        );
         html += `<small style="color: #28a745;">✅ ¡Semana perfecta completada! +5 puntos al registrar el domingo (7/7 días perfectos)</small>`;
       } else {
-        console.log(`⏳ [UI] Progreso semanal: ${progress.perfectDays}/7 días perfectos`);
+        console.log(
+          `⏳ [UI] Progreso semanal: ${progress.perfectDays}/7 días perfectos`
+        );
         html += `<small>${progress.perfectDays}/7 días perfectos esta semana (Lunes-Domingo, sin contar bonus diario)</small>`;
       }
 
@@ -732,7 +766,9 @@ class App {
       await dataService.saveDailyLog(this.currentUser, today, logData);
 
       // Update free passes if used
-      const currentWeek = dataService.getWeekNumber(dataService.getCostaRicaDate());
+      const currentWeek = dataService.getWeekNumber(
+        dataService.getCostaRicaDate()
+      );
       if (restDay) {
         await dataService.updateFreePass(
           this.currentUser,
@@ -763,7 +799,8 @@ class App {
           : `Perdiste ${Math.abs(result.points)} puntos 😔`;
 
       if (weeklyBonus) {
-        message += '<br>🎊 ¡Bonus semanal completado! +5 puntos por semana perfecta';
+        message +=
+          '<br>🎊 ¡Bonus semanal completado! +5 puntos por semana perfecta';
       }
 
       this.showToast(message, result.points > 0 ? 'success' : 'warning');
@@ -848,7 +885,9 @@ class App {
         // Activity badges - show both completed and failed
         if (log.activities) {
           const userConfig = AppConfig.USERS[log.userName];
-          const personalChallenge = userConfig ? userConfig.personalChallenge : null;
+          const personalChallenge = userConfig
+            ? userConfig.personalChallenge
+            : null;
 
           Object.entries(log.activities).forEach(([activity, completed]) => {
             if (completed) {
@@ -877,7 +916,8 @@ class App {
           html += '<span class="activity-badge pass">🍔 Cheat meal</span>';
         }
         if (log.sodaPass) {
-          html += '<span class="activity-badge pass">🥤 Bebida permitida</span>';
+          html +=
+            '<span class="activity-badge pass">🥤 Bebida permitida</span>';
         }
 
         html += '</td></tr>';
@@ -1010,7 +1050,9 @@ class App {
   // Advance or rewind days (for testing)
   advanceDays(days) {
     if (!AppConfig.APP_SETTINGS.DEV_MODE) {
-      console.warn('DEV_MODE is disabled. Enable it in config.js to use dev tools.');
+      console.warn(
+        'DEV_MODE is disabled. Enable it in config.js to use dev tools.'
+      );
       return;
     }
 
@@ -1034,7 +1076,9 @@ class App {
       console.log(`🔄 [DEV MODE] ¡CAMBIO DE SEMANA DETECTADO!`);
       console.log(`   Semana anterior: ${weekBefore}`);
       console.log(`   Semana nueva: ${weekAfter}`);
-      console.log(`   ℹ️ Los pases semanales se resetearán automáticamente al verificar el estado del usuario`);
+      console.log(
+        `   ℹ️ Los pases semanales se resetearán automáticamente al verificar el estado del usuario`
+      );
     }
 
     // Update UI
@@ -1043,7 +1087,9 @@ class App {
       offsetDisplay.textContent = AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET;
     }
 
-    let message = `Días avanzados: ${days > 0 ? '+' : ''}${days} (Total: ${AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET})`;
+    let message = `Días avanzados: ${days > 0 ? '+' : ''}${days} (Total: ${
+      AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET
+    })`;
     if (weekBefore !== weekAfter) {
       message += `<br>🔄 ¡Nueva semana! ${weekBefore} → ${weekAfter}`;
     }
@@ -1057,7 +1103,9 @@ class App {
   // Reset days to today
   resetDays() {
     if (!AppConfig.APP_SETTINGS.DEV_MODE) {
-      console.warn('DEV_MODE is disabled. Enable it in config.js to use dev tools.');
+      console.warn(
+        'DEV_MODE is disabled. Enable it in config.js to use dev tools.'
+      );
       return;
     }
 

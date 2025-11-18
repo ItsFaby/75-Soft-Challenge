@@ -204,26 +204,27 @@ class DataService {
     }
     
     // ===== Helper Methods =====
-    
+
+    // Get current date in Costa Rica timezone (UTC-6)
+    getCostaRicaDate() {
+        const daysOffset = (AppConfig.APP_SETTINGS.DEV_MODE && AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET) || 0;
+
+        if (daysOffset !== 0) {
+            console.log(`🔧 DEV MODE: Date offset by ${daysOffset} days`);
+        }
+
+        return getCostaRicaDate(daysOffset);
+    }
+
     // Get today's date string
     getTodayString() {
-        const date = new Date();
-        // Apply development offset if DEV_MODE is enabled
-        if (AppConfig.APP_SETTINGS.DEV_MODE && AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET !== 0) {
-            date.setDate(date.getDate() + AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET);
-            console.log(`🔧 DEV MODE: Date offset by ${AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET} days`);
-        }
+        const date = this.getCostaRicaDate();
         return date.toISOString().split('T')[0];
     }
 
     // Get today's Date object (with development offset applied)
     getTodayDate() {
-        const date = new Date();
-        // Apply development offset if DEV_MODE is enabled
-        if (AppConfig.APP_SETTINGS.DEV_MODE && AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET !== 0) {
-            date.setDate(date.getDate() + AppConfig.APP_SETTINGS.DEV_DAYS_OFFSET);
-        }
-        return date;
+        return this.getCostaRicaDate();
     }
 
     // Get day of week for today (0-6, with development offset applied)
@@ -232,8 +233,8 @@ class DataService {
     }
 
     getDaysSinceChallengeStart() {
-        const start = new Date(AppConfig.APP_SETTINGS.startDate);    
-        const today = new Date();                 
+        const start = new Date(AppConfig.APP_SETTINGS.startDate);
+        const today = this.getCostaRicaDate();
 
         const diffMs = today - start;
 
@@ -403,7 +404,7 @@ class DataService {
         console.log(`📈 [TRACKING] Calculando progreso semanal para ${userName}`);
 
         const logs = await this.getUserDailyLogs(userName, 30); // Get more days to be sure
-        const today = new Date();
+        const today = this.getCostaRicaDate();
         const currentWeek = this.getWeekNumber(today);
         const weekDays = [];
 
@@ -491,7 +492,7 @@ class DataService {
     // Check free passes usage
     async checkFreePasses(userName) {
         const user = await this.getUser(userName);
-        const currentWeek = this.getWeekNumber(new Date());
+        const currentWeek = this.getWeekNumber(this.getCostaRicaDate());
 
         console.log(`📊 [TRACKING] Verificando pases semanales para ${userName}`);
         console.log(`📅 [TRACKING] Semana actual: ${currentWeek}`);

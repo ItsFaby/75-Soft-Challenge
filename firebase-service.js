@@ -299,8 +299,8 @@ class FirebaseService {
             
             // Calculate last 7 days
             const last7Days = [];
-            const today = new Date();
-            
+            const today = getCostaRicaDate();
+
             for (let i = 6; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);

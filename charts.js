@@ -125,18 +125,18 @@ class ChartsManager {
         
         // Generate last 7 days labels
         for (let i = 6; i >= 0; i--) {
-            const date = new Date();
+            const date = getCostaRicaDate();
             date.setDate(date.getDate() - i);
             labels.push(date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }));
         }
-        
+
         // Process each user's data
         Object.entries(data).forEach(([userName, userData]) => {
             const points = [];
             let accumulated = 0;
-            
+
             for (let i = 6; i >= 0; i--) {
-                const date = new Date();
+                const date = getCostaRicaDate();
                 date.setDate(date.getDate() - i);
                 const dateString = date.toISOString().split('T')[0];
                 
@@ -226,9 +226,9 @@ class ChartsManager {
         
         Object.entries(data).forEach(([userName, userData]) => {
             const counts = [0, 0, 0, 0, 0, 0];
-            
+
             // Count last 7 days
-            const today = new Date();
+            const today = getCostaRicaDate();
             for (let i = 0; i < 7; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
@@ -318,18 +318,18 @@ class ChartsManager {
         // Get last 30 days of data
         const labels = [];
         const datasets = [];
-        
+
         for (let i = 29; i >= 0; i--) {
-            const date = new Date();
+            const date = getCostaRicaDate();
             date.setDate(date.getDate() - i);
             labels.push(date.getDate());
         }
-        
+
         Object.entries(data).forEach(([userName, userData]) => {
             const dailyPoints = [];
-            
+
             for (let i = 29; i >= 0; i--) {
-                const date = new Date();
+                const date = getCostaRicaDate();
                 date.setDate(date.getDate() - i);
                 const dateString = date.toISOString().split('T')[0];
                 
@@ -377,12 +377,12 @@ class ChartsManager {
                     tooltip: {
                         callbacks: {
                             title: function(tooltipItems) {
-                                const date = new Date();
+                                const date = getCostaRicaDate();
                                 date.setDate(date.getDate() - (29 - tooltipItems[0].dataIndex));
-                                return date.toLocaleDateString('es-ES', { 
-                                    weekday: 'short', 
-                                    day: 'numeric', 
-                                    month: 'short' 
+                                return date.toLocaleDateString('es-ES', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short'
                                 });
                             },
                             label: function(context) {

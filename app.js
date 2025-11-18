@@ -732,7 +732,7 @@ class App {
       await dataService.saveDailyLog(this.currentUser, today, logData);
 
       // Update free passes if used
-      const currentWeek = dataService.getWeekNumber(new Date());
+      const currentWeek = dataService.getWeekNumber(dataService.getCostaRicaDate());
       if (restDay) {
         await dataService.updateFreePass(
           this.currentUser,
@@ -897,7 +897,7 @@ class App {
     if (period === 'all') return logs;
 
     const days = parseInt(period);
-    const cutoffDate = new Date();
+    const cutoffDate = dataService.getCostaRicaDate();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     return logs.filter((log) => new Date(log.date) >= cutoffDate);

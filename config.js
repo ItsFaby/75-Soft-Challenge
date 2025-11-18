@@ -23,7 +23,7 @@ const AppConfig = {
     penaltyPoints: 3,
     weeklyBonusPoints: 5,
     dailyBonusPoints: 1,
-    startDate: '2025-11-16',
+    startDate: '2025-11-17',
     endDate: '2026-03-02',
 
     // Development mode settings (set to true to enable dev tools)

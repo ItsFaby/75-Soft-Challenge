@@ -828,11 +828,12 @@ class App {
       html += '</tr></thead><tbody>';
 
       filteredLogs.forEach((log) => {
-        const dateObj = new Date(log.date);
+        const dateObj = new Date(log.date + 'T12:00:00');
         const formattedDate = dateObj.toLocaleDateString('es-ES', {
           weekday: 'short',
           day: 'numeric',
           month: 'short',
+          timeZone: 'America/Costa_Rica'
         });
 
         const pointsClass = log.pointsEarned > 0 ? 'positive' : 'negative';

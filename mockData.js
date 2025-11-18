@@ -4,7 +4,7 @@ class MockDataGenerator {
         this.users = ['Kevin', 'Fabi', 'Vivi', 'Yuli'];
         this.activities = ['exercise', 'healthyFood', 'reading', 'water', 'noAlcohol'];
         this.startDate = new Date('2024-01-01');
-        this.currentDate = new Date();
+        this.currentDate = getCostaRicaDate();
     }
     
     // Generate random boolean with probability
@@ -89,10 +89,10 @@ class MockDataGenerator {
     generateMockData(daysBack = 30) {
         const data = {
             users: {},
-            lastUpdate: new Date().toISOString(),
+            lastUpdate: getCostaRicaDate().toISOString(),
             version: AppConfig.APP_SETTINGS.version
         };
-        
+
         // Initialize users
         this.users.forEach(userName => {
             data.users[userName] = {
@@ -113,10 +113,10 @@ class MockDataGenerator {
                 }
             };
         });
-        
+
         // Generate daily logs for each user
         for (let i = daysBack; i >= 0; i--) {
-            const currentDate = new Date();
+            const currentDate = getCostaRicaDate();
             currentDate.setDate(currentDate.getDate() - i);
             
             // Skip some days randomly to make it realistic
@@ -176,10 +176,10 @@ class MockDataGenerator {
     
     // Generate real-time updates (simulate new daily log)
     generateTodayLog(userName) {
-        const today = new Date();
+        const today = getCostaRicaDate();
         return this.generateDailyLog(userName, today);
     }
-    
+
     // Get leaderboard data
     getLeaderboard(data) {
         return Object.entries(data.users)
@@ -192,15 +192,15 @@ class MockDataGenerator {
             }))
             .sort((a, b) => b.points - a.points);
     }
-    
+
     // Get user statistics
     getUserStats(data, userName) {
         const userData = data.users[userName];
         if (!userData) return null;
-        
+
         const last7Days = [];
-        const today = new Date();
-        
+        const today = getCostaRicaDate();
+
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
@@ -301,11 +301,11 @@ const MockAPI = {
                         return;
                     }
                     
-                    const dateString = log.date || new Date().toISOString().split('T')[0];
+                    const dateString = log.date || getCostaRicaDate().toISOString().split('T')[0];
                     MOCK_DATABASE.users[userName].dailyLogs[dateString] = log;
                     MOCK_DATABASE.users[userName].points += log.pointsEarned;
                     MOCK_DATABASE.users[userName].lastActive = dateString;
-                    MOCK_DATABASE.lastUpdate = new Date().toISOString();
+                    MOCK_DATABASE.lastUpdate = getCostaRicaDate().toISOString();
                     
                     saveMockData();
                     resolve(log);

@@ -6,6 +6,7 @@ class App {
     this.leaderboardUnsubscribe = null;
     this.userUnsubscribe = null;
     this.initialized = false;
+    this.selectedDate = null; // For navigating to previous days (only when ALLOW_EDIT_PREVIOUS_DAYS is true)
   }
 
   // Initialize the app
@@ -60,6 +61,17 @@ class App {
         console.log('🔧 DEV MODE ENABLED - Development tools are visible');
       } else {
         devTools.style.display = 'none';
+      }
+    }
+
+    // Setup date navigation controls visibility
+    const dateNavControls = document.getElementById('dateNavigationControls');
+    if (dateNavControls) {
+      if (AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS) {
+        dateNavControls.style.display = 'block';
+        console.log('📅 ALLOW_EDIT_PREVIOUS_DAYS ENABLED - Date navigation controls are visible');
+      } else {
+        dateNavControls.style.display = 'none';
       }
     }
   }
@@ -134,6 +146,29 @@ class App {
     if (historyPeriod) {
       historyPeriod.addEventListener('change', () => {
         this.updateHistory();
+      });
+    }
+
+    // Date navigation controls (for editing previous days)
+    const prevDayBtn = document.getElementById('prevDayBtn');
+    const nextDayBtn = document.getElementById('nextDayBtn');
+    const resetDateBtn = document.getElementById('resetDateBtn');
+
+    if (prevDayBtn) {
+      prevDayBtn.addEventListener('click', () => {
+        this.navigateDate(-1);
+      });
+    }
+
+    if (nextDayBtn) {
+      nextDayBtn.addEventListener('click', () => {
+        this.navigateDate(1);
+      });
+    }
+
+    if (resetDateBtn) {
+      resetDateBtn.addEventListener('click', () => {
+        this.resetSelectedDate();
       });
     }
   }
@@ -328,7 +363,7 @@ class App {
 
   // Load daily check
   async loadDailyCheck() {
-    // Update date display - use the date with offset applied
+    // Update date display - use either selected date or today
     const dateDisplay = document.getElementById('dateDisplay');
     if (dateDisplay) {
       const options = {
@@ -337,15 +372,17 @@ class App {
         month: 'long',
         day: 'numeric',
       };
-      const today = dataService
-        .getTodayDate()
-        .toLocaleDateString('es-ES', options);
-      dateDisplay.textContent = `📅 ${today}`;
+      const displayDate = this.getDisplayDateObject();
+      const dateStr = displayDate.toLocaleDateString('es-ES', options);
+      dateDisplay.textContent = `📅 ${dateStr}`;
     }
 
+    // Update date navigation indicator
+    this.updateDateNavigationIndicator();
+
     // Update daily challenge - GLOBAL (same for everyone)
-    // Use getTodayDayOfWeek() to apply development offset
-    const dayIndex = dataService.getTodayDayOfWeek();
+    // Use the display day of week to show the correct challenge for the selected date
+    const dayIndex = this.getDisplayDayOfWeek();
     const challenge = AppConfig.DAILY_CHALLENGES[dayIndex];
     const label = document.getElementById('dailyBonusLabel');
     if (label && challenge) {
@@ -375,31 +412,32 @@ class App {
     if (!this.currentUser) return;
 
     const userData = AppConfig.USERS[this.currentUser];
-    const today = dataService.getTodayString();
-    console.log(today);
+    // Use display date instead of always "today"
+    const displayDate = this.getDisplayDate();
+    console.log(displayDate);
 
-    // Check if already logged today
-    const hasLogged = await dataService.hasLoggedToday(this.currentUser, today);
+    // Check if already logged for the display date
+    const hasLogged = await dataService.hasLoggedToday(this.currentUser, displayDate);
     const submitButton = document.getElementById('submitDaily');
     const checkboxes = document.querySelectorAll(
       '.checklist input[type="checkbox"]'
     );
 
     if (hasLogged) {
-      // User already logged - allow editing during the day
+      // User already logged - allow editing
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = '🔄 Actualizar Registro';
       }
 
       // Load and show logged data for editing
-      const logs = await dataService.getUserDailyLogs(this.currentUser, 1);
-      const todayLog = logs[today];
+      const logs = await dataService.getUserDailyLogs(this.currentUser, 365);
+      const dateLog = logs[displayDate];
 
-      if (todayLog) {
+      if (dateLog) {
         checkboxes.forEach((cb) => {
           cb.disabled = false; // Allow editing
-          cb.checked = todayLog.activities && todayLog.activities[cb.value];
+          cb.checked = dateLog.activities && dateLog.activities[cb.value];
         });
 
         const dailyBonus = document.getElementById('dailyBonus');
@@ -408,19 +446,19 @@ class App {
         const sodaPass = document.getElementById('sodaPass');
 
         if (dailyBonus) {
-          dailyBonus.checked = todayLog.dailyBonus;
+          dailyBonus.checked = dateLog.dailyBonus;
           dailyBonus.disabled = false; // Allow editing
         }
         if (restDay) {
-          restDay.checked = todayLog.restDay;
+          restDay.checked = dateLog.restDay;
           restDay.disabled = false; // Allow editing
         }
         if (cheatMeal) {
-          cheatMeal.checked = todayLog.cheatMeal;
+          cheatMeal.checked = dateLog.cheatMeal;
           cheatMeal.disabled = false; // Allow editing
         }
         if (sodaPass) {
-          sodaPass.checked = todayLog.sodaPass;
+          sodaPass.checked = dateLog.sodaPass;
           sodaPass.disabled = false; // Allow editing
         }
       }
@@ -474,8 +512,8 @@ class App {
       `🎫 [UI] Verificando y actualizando pases semanales en la interfaz...`
     );
 
-    const today = dataService.getTodayString();
-    const hasLogged = await dataService.hasLoggedToday(this.currentUser, today);
+    const displayDate = this.getDisplayDate();
+    const hasLogged = await dataService.hasLoggedToday(this.currentUser, displayDate);
     const passes = await dataService.checkFreePasses(this.currentUser);
     const restDay = document.getElementById('restDay');
     const cheatMeal = document.getElementById('cheatMeal');
@@ -718,7 +756,8 @@ class App {
       return;
     }
 
-    const today = dataService.getTodayString();
+    // Use display date instead of always "today"
+    const dateToSave = this.getDisplayDate();
     const userData = AppConfig.USERS[this.currentUser];
 
     // Get form data
@@ -763,7 +802,7 @@ class App {
 
     try {
       // Save log
-      await dataService.saveDailyLog(this.currentUser, today, logData);
+      await dataService.saveDailyLog(this.currentUser, dateToSave, logData);
 
       // Update free passes if used
       const currentWeek = dataService.getWeekNumber(
@@ -1145,6 +1184,122 @@ class App {
           break;
       }
     }
+  }
+
+  // ===== Date Navigation (for editing previous days) =====
+
+  // Navigate to a different date (only when ALLOW_EDIT_PREVIOUS_DAYS is true)
+  navigateDate(days) {
+    if (!AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS) {
+      console.warn(
+        'ALLOW_EDIT_PREVIOUS_DAYS is disabled. Enable it in config.js to edit previous days.'
+      );
+      this.showToast('Edición de días anteriores deshabilitada', 'warning');
+      return;
+    }
+
+    // If no date selected, start from today
+    if (!this.selectedDate) {
+      this.selectedDate = dataService.getTodayString();
+    }
+
+    // Parse the current selected date and navigate
+    const currentDate = new Date(this.selectedDate + 'T00:00:00');
+    currentDate.setDate(currentDate.getDate() + days);
+
+    // Format as YYYY-MM-DD
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    this.selectedDate = `${year}-${month}-${day}`;
+
+    console.log(`📅 Navegando a fecha: ${this.selectedDate}`);
+
+    // Update navigation indicator
+    this.updateDateNavigationIndicator();
+
+    // Reload daily check with new date
+    this.loadDailyCheck();
+  }
+
+  // Reset to today's date
+  resetSelectedDate() {
+    if (!AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS) {
+      console.warn(
+        'ALLOW_EDIT_PREVIOUS_DAYS is disabled. Enable it in config.js to edit previous days.'
+      );
+      return;
+    }
+
+    this.selectedDate = null;
+    console.log('📅 Fecha reseteada a hoy');
+
+    // Update navigation indicator
+    this.updateDateNavigationIndicator();
+
+    // Reload daily check
+    this.loadDailyCheck();
+  }
+
+  // Get the date to display (either selected date or today)
+  getDisplayDate() {
+    if (this.selectedDate && AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS) {
+      return this.selectedDate;
+    }
+    return dataService.getTodayString();
+  }
+
+  // Get the date object to display (either selected date or today)
+  getDisplayDateObject() {
+    if (this.selectedDate && AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS) {
+      // Parse the selected date string (YYYY-MM-DD) and create a date in Costa Rica time
+      const [year, month, day] = this.selectedDate.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      return date;
+    }
+    return dataService.getTodayDate();
+  }
+
+  // Get the day of week for display date (0-6, Sunday-Saturday)
+  getDisplayDayOfWeek() {
+    if (this.selectedDate && AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS) {
+      const date = this.getDisplayDateObject();
+      return date.getDay();
+    }
+    return dataService.getTodayDayOfWeek();
+  }
+
+  // Update the date navigation indicator in the UI
+  updateDateNavigationIndicator() {
+    const indicator = document.getElementById('dateNavigationIndicator');
+    if (!indicator) return;
+
+    if (this.selectedDate && AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS) {
+      const today = dataService.getTodayString();
+      const daysFromToday = this.calculateDaysDifference(this.selectedDate, today);
+
+      if (daysFromToday === 0) {
+        indicator.innerHTML = '📅 <strong>Hoy</strong>';
+        indicator.style.color = '#28a745';
+      } else if (daysFromToday < 0) {
+        indicator.innerHTML = `📅 <strong>${Math.abs(daysFromToday)} día${Math.abs(daysFromToday) > 1 ? 's' : ''} atrás</strong>`;
+        indicator.style.color = '#ffc107';
+      } else {
+        indicator.innerHTML = `📅 <strong>${daysFromToday} día${daysFromToday > 1 ? 's' : ''} en el futuro</strong>`;
+        indicator.style.color = '#17a2b8';
+      }
+    } else {
+      indicator.innerHTML = '';
+    }
+  }
+
+  // Calculate days difference between two dates
+  calculateDaysDifference(date1, date2) {
+    const d1 = new Date(date1 + 'T00:00:00');
+    const d2 = new Date(date2 + 'T00:00:00');
+    const diffTime = d2 - d1;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   }
 
   // Cleanup

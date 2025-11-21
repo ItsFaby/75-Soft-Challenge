@@ -2,15 +2,10 @@
   "functions": {
     "source": "functions",
     "predeploy": [],
-    "runtime": "nodejs18"
+    "runtime": "nodejs20"
   },
   "hosting": {
     "public": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**",
-      "functions/**"
-    ]
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "functions/**"]
   }
 }

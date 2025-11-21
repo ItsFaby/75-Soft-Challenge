@@ -68,6 +68,7 @@ class DataService {
             },
             restDaysUsed: {},
             cheatMealsUsed: {},
+            dessertPassesUsed: {},
             sodaPassesUsed: {},
           };
 
@@ -560,6 +561,21 @@ class DataService {
       }
     }
 
+    if (user.dessertPassesUsed) {
+      const oldWeeks = Object.keys(user.dessertPassesUsed).filter(
+        (week) => week !== currentWeek
+      );
+      if (oldWeeks.length > 0) {
+        console.log(
+          `🧹 [TRACKING] Limpiando pases de postre de semanas anteriores: ${oldWeeks.join(
+            ', '
+          )}`
+        );
+        oldWeeks.forEach((week) => delete user.dessertPassesUsed[week]);
+        passesResetted = true;
+      }
+    }
+
     if (user.sodaPassesUsed) {
       const oldWeeks = Object.keys(user.sodaPassesUsed).filter(
         (week) => week !== currentWeek
@@ -586,8 +602,9 @@ class DataService {
     const result = {
       restDayUsed: user.restDaysUsed && user.restDaysUsed[currentWeek] === true,
       cheatMealUsed:
-        user.cheatMealsUsed && (user.cheatMealsUsed[currentWeek] || 0) >= AppConfig.FREE_PASSES.cheatMeal.perWeek,
-      cheatMealCount: user.cheatMealsUsed ? (user.cheatMealsUsed[currentWeek] || 0) : 0,
+        user.cheatMealsUsed && user.cheatMealsUsed[currentWeek] === true,
+      dessertPassUsed:
+        user.dessertPassesUsed && user.dessertPassesUsed[currentWeek] === true,
       sodaPassUsed:
         user.sodaPassesUsed && user.sodaPassesUsed[currentWeek] === true,
       week: currentWeek,
@@ -596,6 +613,7 @@ class DataService {
     console.log(`📋 [TRACKING] Estado de pases para semana ${currentWeek}:`, {
       restDay: result.restDayUsed ? '❌ Usado' : '✅ Disponible',
       cheatMeal: result.cheatMealUsed ? '❌ Usado' : '✅ Disponible',
+      dessertPass: result.dessertPassUsed ? '❌ Usado' : '✅ Disponible',
       sodaPass: result.sodaPassUsed ? '❌ Usado' : '✅ Disponible',
     });
 
@@ -618,9 +636,15 @@ class DataService {
       );
     } else if (passType === 'cheatMeal') {
       if (!user.cheatMealsUsed) user.cheatMealsUsed = {};
-      user.cheatMealsUsed[week] = (user.cheatMealsUsed[week] || 0) + 1;
+      user.cheatMealsUsed[week] = true;
       console.log(
-        `✅ [TRACKING] Cheat meal marcado como usado en semana ${week} (total: ${user.cheatMealsUsed[week]})`
+        `✅ [TRACKING] Cheat meal marcado como usado en semana ${week}`
+      );
+    } else if (passType === 'dessertPass') {
+      if (!user.dessertPassesUsed) user.dessertPassesUsed = {};
+      user.dessertPassesUsed[week] = true;
+      console.log(
+        `✅ [TRACKING] Postre marcado como usado en semana ${week}`
       );
     } else if (passType === 'sodaPass') {
       if (!user.sodaPassesUsed) user.sodaPassesUsed = {};

@@ -339,10 +339,16 @@ const AppConfig = {
       perWeek: 1,
     },
     cheatMeal: {
-      name: 'Comida chatarra permitida',
+      name: 'Comida chatarra (main dish)',
       icon: '🍔',
       affectsActivity: 'healthyFood',
-      perWeek: 2,
+      perWeek: 1,
+    },
+    dessertPass: {
+      name: 'Postre permitido',
+      icon: '🍰',
+      affectsActivity: 'healthyFood',
+      perWeek: 1,
     },
     sodaPass: {
       name: 'Bebida gasificada/cero permitida',

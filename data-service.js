@@ -227,7 +227,8 @@ class DataService {
   // Get today's date string
   getTodayString() {
     const date = this.getCostaRicaDate();
-    return date.toISOString().split('T')[0];
+    // Use formatDateString to avoid UTC conversion issues
+    return formatDateString(date);
   }
 
   // Get today's Date object (with development offset applied)
@@ -363,7 +364,7 @@ class DataService {
     for (let i = 0; i < 100; i++) {
       const checkDate = new Date(todayDate);
       checkDate.setDate(checkDate.getDate() - i);
-      const dateString = checkDate.toISOString().split('T')[0];
+      const dateString = formatDateString(checkDate);
       const dayLog = logs[dateString];
 
       if (isPerfectDay(dayLog)) {
@@ -386,7 +387,7 @@ class DataService {
       for (let i = 0; i < totalDays; i++) {
         const checkDate = new Date(startDate);
         checkDate.setDate(checkDate.getDate() + i);
-        const dateString = checkDate.toISOString().split('T')[0];
+        const dateString = formatDateString(checkDate);
         const dayLog = logs[dateString];
 
         if (isPerfectDay(dayLog)) {
@@ -450,7 +451,7 @@ class DataService {
     for (let i = 0; i < 7; i++) {
       const date = new Date(monday);
       date.setDate(monday.getDate() + i);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = formatDateString(date);
       const dayLog = logs[dateString];
       const isFuture = date > today;
       const isPast = date < today && dateString !== this.getTodayString();

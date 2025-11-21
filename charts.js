@@ -138,8 +138,8 @@ class ChartsManager {
             for (let i = 6; i >= 0; i--) {
                 const date = getCostaRicaDate();
                 date.setDate(date.getDate() - i);
-                const dateString = date.toISOString().split('T')[0];
-                
+                const dateString = formatDateString(date);
+
                 if (userData.dailyLogs && userData.dailyLogs[dateString]) {
                     accumulated += userData.dailyLogs[dateString].pointsEarned || 0;
                 }
@@ -232,8 +232,8 @@ class ChartsManager {
             for (let i = 0; i < 7; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateString = date.toISOString().split('T')[0];
-                
+                const dateString = formatDateString(date);
+
                 if (userData.dailyLogs && userData.dailyLogs[dateString]) {
                     const log = userData.dailyLogs[dateString];
                     if (log.activities) {
@@ -331,8 +331,8 @@ class ChartsManager {
             for (let i = 29; i >= 0; i--) {
                 const date = getCostaRicaDate();
                 date.setDate(date.getDate() - i);
-                const dateString = date.toISOString().split('T')[0];
-                
+                const dateString = formatDateString(date);
+
                 let points = 0;
                 if (userData.dailyLogs && userData.dailyLogs[dateString]) {
                     points = userData.dailyLogs[dateString].pointsEarned || 0;

@@ -304,8 +304,8 @@ class FirebaseService {
             for (let i = 6; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateString = date.toISOString().split('T')[0];
-                
+                const dateString = formatDateString(date);
+
                 last7Days.push({
                     date: dateString,
                     log: logs[dateString] || null

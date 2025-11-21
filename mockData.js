@@ -156,7 +156,7 @@ class MockDataGenerator {
                     userData.restDaysUsed[weekNumber] = true;
                 }
                 if (dailyLog.cheatMeal) {
-                    userData.cheatMealsUsed[weekNumber] = true;
+                    userData.cheatMealsUsed[weekNumber] = (userData.cheatMealsUsed[weekNumber] || 0) + 1;
                 }
             });
         }

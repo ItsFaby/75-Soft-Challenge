@@ -7,6 +7,8 @@ class App {
     this.userUnsubscribe = null;
     this.initialized = false;
     this.selectedDate = null; // For navigating to previous days (only when ALLOW_EDIT_PREVIOUS_DAYS is true)
+    this.isAdminLoggedIn = false; // Track admin login status
+    this.currentDailyChallenge = null; // Store current challenge for user
   }
 
   // Initialize the app
@@ -178,6 +180,47 @@ class App {
         this.resetSelectedDate();
       });
     }
+
+    // Challenges tab
+    const challengesUser = document.getElementById('challengesUser');
+    if (challengesUser) {
+      challengesUser.addEventListener('change', () => {
+        this.loadChallengesList();
+      });
+    }
+
+    // Admin tab
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    const addChallengeBtn = document.getElementById('addChallengeBtn');
+
+    if (adminLoginBtn) {
+      adminLoginBtn.addEventListener('click', () => {
+        this.adminLogin();
+      });
+    }
+
+    if (adminLogoutBtn) {
+      adminLogoutBtn.addEventListener('click', () => {
+        this.adminLogout();
+      });
+    }
+
+    if (addChallengeBtn) {
+      addChallengeBtn.addEventListener('click', () => {
+        this.addNewChallenge();
+      });
+    }
+
+    // Admin password input - allow Enter key
+    const adminPassword = document.getElementById('adminPassword');
+    if (adminPassword) {
+      adminPassword.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.adminLogin();
+        }
+      });
+    }
   }
 
   // Switch tab
@@ -212,6 +255,12 @@ class App {
         break;
       case 'history':
         this.updateHistory();
+        break;
+      case 'challenges':
+        this.loadChallengesTab();
+        break;
+      case 'admin':
+        this.loadAdminTab();
         break;
     }
   }
@@ -387,13 +436,33 @@ class App {
     // Update date navigation indicator
     this.updateDateNavigationIndicator();
 
-    // Update daily challenge - GLOBAL (same for everyone)
-    // Use the display day of week to show the correct challenge for the selected date
-    const dayIndex = this.getDisplayDayOfWeek();
-    const challenge = AppConfig.DAILY_CHALLENGES[dayIndex];
-    const label = document.getElementById('dailyBonusLabel');
-    if (label && challenge) {
-      label.textContent = challenge.text;
+    // Update daily challenge - Get from database (random for each user)
+    if (this.currentUser) {
+      try {
+        const challenge = await dataService.getDailyChallengeForUser(this.currentUser);
+        this.currentDailyChallenge = challenge; // Store for later use
+        const label = document.getElementById('dailyBonusLabel');
+        if (label && challenge) {
+          label.textContent = challenge.text;
+        }
+      } catch (error) {
+        console.error('Error loading daily challenge:', error);
+        // Fallback to config if database fails
+        const dayIndex = this.getDisplayDayOfWeek();
+        const challenge = AppConfig.DAILY_CHALLENGES[dayIndex];
+        this.currentDailyChallenge = challenge;
+        const label = document.getElementById('dailyBonusLabel');
+        if (label && challenge) {
+          label.textContent = challenge.text;
+        }
+      }
+    } else {
+      // No user selected, show placeholder
+      const label = document.getElementById('dailyBonusLabel');
+      if (label) {
+        label.textContent = 'Selecciona tu nombre para ver tu reto del día';
+      }
+      this.currentDailyChallenge = null;
     }
 
     // Check current user
@@ -838,6 +907,7 @@ class App {
     const logData = {
       activities: activities,
       dailyBonus: dailyBonus,
+      dailyChallengeId: this.currentDailyChallenge ? this.currentDailyChallenge.id : null,
       weeklyBonus: weeklyBonus,
       restDay: restDay,
       cheatMeal: cheatMeal,
@@ -850,6 +920,11 @@ class App {
     try {
       // Save log
       await dataService.saveDailyLog(this.currentUser, dateToSave, logData);
+
+      // If daily bonus was completed, mark challenge as completed
+      if (dailyBonus && this.currentDailyChallenge) {
+        await dataService.markChallengeCompleted(this.currentUser, this.currentDailyChallenge.id);
+      }
 
       // Update free passes if used
       const currentWeek = dataService.getWeekNumber(
@@ -1364,6 +1439,262 @@ class App {
     const diffTime = d2 - d1;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
+  }
+
+  // ===== Challenges Tab =====
+
+  // Load challenges tab
+  async loadChallengesTab() {
+    const challengesUser = document.getElementById('challengesUser');
+    if (challengesUser && challengesUser.value) {
+      await this.loadChallengesList();
+    } else {
+      const container = document.getElementById('challengesList');
+      if (container) {
+        container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">Selecciona un usuario para ver su progreso de retos</p>';
+      }
+    }
+  }
+
+  // Load challenges list with status
+  async loadChallengesList() {
+    const challengesUser = document.getElementById('challengesUser');
+    const container = document.getElementById('challengesList');
+
+    if (!challengesUser || !container) return;
+
+    const userName = challengesUser.value;
+    if (!userName) {
+      container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">Selecciona un usuario para ver su progreso de retos</p>';
+      return;
+    }
+
+    try {
+      const challengesWithStatus = await dataService.getChallengesWithStatus(userName);
+
+      if (challengesWithStatus.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">No hay retos disponibles aún</p>';
+        return;
+      }
+
+      let html = '<div style="display: grid; gap: 10px;">';
+      challengesWithStatus.forEach((challenge, index) => {
+        const isCompleted = challenge.completed;
+        const bgColor = isCompleted ? '#f8f9fa' : '#ffffff';
+        const textDecoration = isCompleted ? 'line-through' : 'none';
+        const opacity = isCompleted ? '0.6' : '1';
+        const checkIcon = isCompleted ? '✅' : '⭕';
+
+        html += `
+          <div style="
+            background: ${bgColor};
+            border: 2px solid ${isCompleted ? '#28a745' : '#ddd'};
+            border-radius: 8px;
+            padding: 15px;
+            opacity: ${opacity};
+            transition: all 0.3s ease;
+          ">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 24px;">${checkIcon}</span>
+              <span style="
+                flex: 1;
+                text-decoration: ${textDecoration};
+                color: ${isCompleted ? '#666' : '#333'};
+                font-weight: ${isCompleted ? 'normal' : 'bold'};
+              ">${challenge.text}</span>
+              ${isCompleted ? '<span style="color: #28a745; font-weight: bold;">Completado</span>' : '<span style="color: #666;">Pendiente</span>'}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      const completedCount = challengesWithStatus.filter(c => c.completed).length;
+      const totalCount = challengesWithStatus.length;
+
+      html = `
+        <div style="background: #e7f3ff; border: 2px solid #2196F3; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+          <h3 style="margin: 0 0 10px 0; color: #1976D2;">📊 Progreso de ${userName}</h3>
+          <p style="margin: 0; font-size: 18px; font-weight: bold;">
+            ${completedCount} / ${totalCount} retos completados (${Math.round((completedCount / totalCount) * 100)}%)
+          </p>
+          <div style="background: #ddd; height: 20px; border-radius: 10px; margin-top: 10px; overflow: hidden;">
+            <div style="background: #28a745; height: 100%; width: ${(completedCount / totalCount) * 100}%; transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+      ` + html;
+
+      container.innerHTML = html;
+    } catch (error) {
+      console.error('Error loading challenges list:', error);
+      container.innerHTML = '<p style="text-align: center; color: #dc3545;">Error al cargar los retos</p>';
+    }
+  }
+
+  // ===== Admin Tab =====
+
+  // Load admin tab
+  async loadAdminTab() {
+    // Check if admin is logged in
+    if (this.isAdminLoggedIn) {
+      await this.loadAdminChallenges();
+    }
+  }
+
+  // Admin login
+  adminLogin() {
+    const passwordInput = document.getElementById('adminPassword');
+    const adminLogin = document.getElementById('adminLogin');
+    const adminPanel = document.getElementById('adminPanel');
+
+    if (!passwordInput || !adminLogin || !adminPanel) return;
+
+    const password = passwordInput.value;
+
+    if (password === 'contrasenaespecialdeladmin') {
+      this.isAdminLoggedIn = true;
+      adminLogin.style.display = 'none';
+      adminPanel.style.display = 'block';
+      passwordInput.value = '';
+      this.showToast('✅ Acceso de administrador concedido', 'success');
+      this.loadAdminChallenges();
+    } else {
+      this.showToast('❌ Contraseña incorrecta', 'error');
+      passwordInput.value = '';
+    }
+  }
+
+  // Admin logout
+  adminLogout() {
+    this.isAdminLoggedIn = false;
+    const adminLogin = document.getElementById('adminLogin');
+    const adminPanel = document.getElementById('adminPanel');
+
+    if (adminLogin) adminLogin.style.display = 'block';
+    if (adminPanel) adminPanel.style.display = 'none';
+
+    this.showToast('Sesión de administrador cerrada', 'info');
+  }
+
+  // Load admin challenges list
+  async loadAdminChallenges() {
+    const container = document.getElementById('adminChallengesList');
+    if (!container) return;
+
+    try {
+      const challenges = await dataService.getAllChallenges();
+
+      if (challenges.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">No hay retos creados aún</p>';
+        return;
+      }
+
+      let html = '<div style="display: grid; gap: 15px;">';
+      challenges.forEach((challenge, index) => {
+        html += `
+          <div style="background: #fff; border: 2px solid #ddd; border-radius: 8px; padding: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+              <span style="font-weight: bold; color: #666;">#${index + 1}</span>
+              <span style="flex: 1; font-weight: bold;">${challenge.text}</span>
+              <button
+                onclick="app.editChallenge('${challenge.id}')"
+                style="padding: 5px 15px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;"
+              >
+                ✏️ Editar
+              </button>
+              <button
+                onclick="app.deleteChallenge('${challenge.id}')"
+                style="padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;"
+              >
+                🗑️ Eliminar
+              </button>
+            </div>
+            <div style="color: #666; font-size: 14px;">ID: ${challenge.id}</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      container.innerHTML = html;
+    } catch (error) {
+      console.error('Error loading admin challenges:', error);
+      container.innerHTML = '<p style="text-align: center; color: #dc3545;">Error al cargar los retos</p>';
+    }
+  }
+
+  // Add new challenge
+  addNewChallenge() {
+    const text = prompt('Ingresa el texto del nuevo reto:');
+    if (!text || text.trim() === '') {
+      this.showToast('Operación cancelada', 'info');
+      return;
+    }
+
+    const id = prompt('Ingresa un ID único para el reto (ej: "meditation5min"):');
+    if (!id || id.trim() === '') {
+      this.showToast('Operación cancelada', 'info');
+      return;
+    }
+
+    this.saveChallengeToDatabase(id.trim(), text.trim());
+  }
+
+  // Edit challenge
+  async editChallenge(challengeId) {
+    try {
+      const challenge = await dataService.getChallenge(challengeId);
+      if (!challenge) {
+        this.showToast('Reto no encontrado', 'error');
+        return;
+      }
+
+      const newText = prompt('Edita el texto del reto:', challenge.text);
+      if (!newText || newText.trim() === '') {
+        this.showToast('Operación cancelada', 'info');
+        return;
+      }
+
+      this.saveChallengeToDatabase(challengeId, newText.trim());
+    } catch (error) {
+      console.error('Error editing challenge:', error);
+      this.showToast('Error al editar el reto', 'error');
+    }
+  }
+
+  // Delete challenge
+  async deleteChallenge(challengeId) {
+    const confirmed = confirm('¿Estás seguro de que quieres eliminar este reto?\n\nEsta acción no se puede deshacer.');
+    if (!confirmed) return;
+
+    try {
+      await dataService.deleteChallenge(challengeId);
+      this.showToast('✅ Reto eliminado exitosamente', 'success');
+      await this.loadAdminChallenges();
+    } catch (error) {
+      console.error('Error deleting challenge:', error);
+      this.showToast('Error al eliminar el reto', 'error');
+    }
+  }
+
+  // Save challenge to database
+  async saveChallengeToDatabase(challengeId, text) {
+    try {
+      // Get all challenges to determine the order
+      const allChallenges = await dataService.getAllChallenges();
+      const order = allChallenges.length;
+
+      await dataService.saveChallenge(challengeId, {
+        text: text,
+        order: order,
+        active: true
+      });
+
+      this.showToast('✅ Reto guardado exitosamente', 'success');
+      await this.loadAdminChallenges();
+    } catch (error) {
+      console.error('Error saving challenge:', error);
+      this.showToast('Error al guardar el reto', 'error');
+    }
   }
 
   // Cleanup

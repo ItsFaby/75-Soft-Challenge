@@ -29,6 +29,9 @@ const AppConfig = {
     // Development mode settings (set to true to enable dev tools)
     DEV_MODE: false, // Set to true to show dev controls in UI
     DEV_DAYS_OFFSET: 0, // Change this to advance/rewind days (only works when DEV_MODE is true)
+
+    // Allow editing previous days logs (developer only - restricted for participants)
+    ALLOW_EDIT_PREVIOUS_DAYS: false, // Set to true to enable navigation and editing of previous days
   },
 
   // Users configuration

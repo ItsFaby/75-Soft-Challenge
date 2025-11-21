@@ -347,7 +347,7 @@ h1 {
 
 /* ===== Free Pass Section ===== */
 .free-pass-section {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient(135deg, #a770ef 0%, #cf8bf3 100%);
   padding: 20px;
   border-radius: var(--border-radius);
   margin: 20px 0;

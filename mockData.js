@@ -29,17 +29,21 @@ class MockDataGenerator {
         
         // Check for free passes (random)
         const restDayUsed = personalChallenge === 'exercise' && this.randomBoolean(0.1);
-        const cheatMealUsed = personalChallenge === 'healthyFood' && this.randomBoolean(0.1);
-        
+        const cheatMealUsed = personalChallenge === 'healthyFood' && this.randomBoolean(0.05);
+        const dessertPassUsed = personalChallenge === 'healthyFood' && this.randomBoolean(0.05);
+
         // Generate activity completion
         this.activities.forEach(activity => {
             let completed = this.randomBoolean();
-            
+
             // Apply free passes
             if (activity === 'exercise' && restDayUsed) {
                 completed = true;
             }
             if (activity === 'healthyFood' && cheatMealUsed) {
+                completed = true;
+            }
+            if (activity === 'healthyFood' && dessertPassUsed) {
                 completed = true;
             }
             
@@ -79,6 +83,7 @@ class MockDataGenerator {
             weeklyBonus: weeklyBonus,
             restDay: restDayUsed,
             cheatMeal: cheatMealUsed,
+            dessertPass: dessertPassUsed,
             pointsEarned: points,
             breakdown: breakdown,
             timestamp: date.getTime()
@@ -103,6 +108,7 @@ class MockDataGenerator {
                 weeklyStreaks: {},
                 restDaysUsed: {},
                 cheatMealsUsed: {},
+                dessertPassesUsed: {},
                 joinDate: this.startDate.toISOString(),
                 lastActive: null,
                 stats: {
@@ -156,7 +162,10 @@ class MockDataGenerator {
                     userData.restDaysUsed[weekNumber] = true;
                 }
                 if (dailyLog.cheatMeal) {
-                    userData.cheatMealsUsed[weekNumber] = (userData.cheatMealsUsed[weekNumber] || 0) + 1;
+                    userData.cheatMealsUsed[weekNumber] = true;
+                }
+                if (dailyLog.dessertPass) {
+                    userData.dessertPassesUsed[weekNumber] = true;
                 }
             });
         }

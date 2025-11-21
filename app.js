@@ -104,6 +104,7 @@ class App {
     // Free passes
     const restDay = document.getElementById('restDay');
     const cheatMeal = document.getElementById('cheatMeal');
+    const dessertPass = document.getElementById('dessertPass');
     const sodaPass = document.getElementById('sodaPass');
 
     if (restDay) {
@@ -115,6 +116,12 @@ class App {
     if (cheatMeal) {
       cheatMeal.addEventListener('change', (e) => {
         this.handleFreePass('cheatMeal', e.target.checked);
+      });
+    }
+
+    if (dessertPass) {
+      dessertPass.addEventListener('change', (e) => {
+        this.handleFreePass('dessertPass', e.target.checked);
       });
     }
 
@@ -443,6 +450,7 @@ class App {
         const dailyBonus = document.getElementById('dailyBonus');
         const restDay = document.getElementById('restDay');
         const cheatMeal = document.getElementById('cheatMeal');
+        const dessertPass = document.getElementById('dessertPass');
         const sodaPass = document.getElementById('sodaPass');
 
         if (dailyBonus) {
@@ -456,6 +464,10 @@ class App {
         if (cheatMeal) {
           cheatMeal.checked = dateLog.cheatMeal;
           cheatMeal.disabled = false; // Allow editing
+        }
+        if (dessertPass) {
+          dessertPass.checked = dateLog.dessertPass;
+          dessertPass.disabled = false; // Allow editing
         }
         if (sodaPass) {
           sodaPass.checked = dateLog.sodaPass;
@@ -517,9 +529,11 @@ class App {
     const passes = await dataService.checkFreePasses(this.currentUser);
     const restDay = document.getElementById('restDay');
     const cheatMeal = document.getElementById('cheatMeal');
+    const dessertPass = document.getElementById('dessertPass');
     const sodaPass = document.getElementById('sodaPass');
     const restDayCount = document.getElementById('restDayCount');
     const cheatMealCount = document.getElementById('cheatMealCount');
+    const dessertPassCount = document.getElementById('dessertPassCount');
     const sodaPassCount = document.getElementById('sodaPassCount');
 
     if (restDay) {
@@ -540,9 +554,18 @@ class App {
       if (!hasLogged) {
         cheatMeal.checked = false;
       }
-      const remaining = AppConfig.FREE_PASSES.cheatMeal.perWeek - (passes.cheatMealCount || 0);
       console.log(
-        `   Cheat meal: ${passes.cheatMealUsed ? '❌ Todos usados' : `✅ ${remaining} disponible${remaining > 1 ? 's' : ''}`}`
+        `   Cheat meal: ${passes.cheatMealUsed ? '❌ Usado' : '✅ Disponible'}`
+      );
+    }
+    if (dessertPass) {
+      dessertPass.disabled = passes.dessertPassUsed;
+      // Only keep checked if user already logged today and it was in their log
+      if (!hasLogged) {
+        dessertPass.checked = false;
+      }
+      console.log(
+        `   Postre libre: ${passes.dessertPassUsed ? '❌ Usado' : '✅ Disponible'}`
       );
     }
     if (sodaPass) {
@@ -563,12 +586,14 @@ class App {
         : '1 disponible';
     }
     if (cheatMealCount) {
-      const used = passes.cheatMealCount || 0;
-      const total = AppConfig.FREE_PASSES.cheatMeal.perWeek;
-      const remaining = total - used;
       cheatMealCount.textContent = passes.cheatMealUsed
-        ? '✅ Todos usados esta semana'
-        : `${remaining} disponible${remaining > 1 ? 's' : ''}`;
+        ? '✅ Usado esta semana'
+        : '1 disponible';
+    }
+    if (dessertPassCount) {
+      dessertPassCount.textContent = passes.dessertPassUsed
+        ? '✅ Usado esta semana'
+        : '1 disponible';
     }
     if (sodaPassCount) {
       sodaPassCount.textContent = passes.sodaPassUsed
@@ -605,6 +630,22 @@ class App {
         healthyFoodItem.classList.add('completed');
         document.getElementById('healthyFoodPoints').textContent =
           '🍔 Cheat meal';
+      } else {
+        healthyFood.disabled = false;
+        healthyFood.checked = false;
+        healthyFoodItem.classList.remove('completed');
+        this.updatePointsPreview();
+      }
+    } else if (type === 'dessertPass') {
+      const healthyFood = document.getElementById('healthyFood');
+      const healthyFoodItem = document.getElementById('healthyFoodItem');
+
+      if (checked) {
+        healthyFood.checked = true;
+        healthyFood.disabled = true;
+        healthyFoodItem.classList.add('completed');
+        document.getElementById('healthyFoodPoints').textContent =
+          '🍰 Postre libre';
       } else {
         healthyFood.disabled = false;
         healthyFood.checked = false;
@@ -776,6 +817,7 @@ class App {
     const dailyBonus = document.getElementById('dailyBonus')?.checked || false;
     const restDay = document.getElementById('restDay')?.checked || false;
     const cheatMeal = document.getElementById('cheatMeal')?.checked || false;
+    const dessertPass = document.getElementById('dessertPass')?.checked || false;
     const sodaPass = document.getElementById('sodaPass')?.checked || false;
 
     // Check if today will complete a perfect week (including today's activities)
@@ -799,6 +841,7 @@ class App {
       weeklyBonus: weeklyBonus,
       restDay: restDay,
       cheatMeal: cheatMeal,
+      dessertPass: dessertPass,
       sodaPass: sodaPass,
       pointsEarned: result.points,
       breakdown: result.breakdown,
@@ -823,6 +866,13 @@ class App {
         await dataService.updateFreePass(
           this.currentUser,
           'cheatMeal',
+          currentWeek
+        );
+      }
+      if (dessertPass) {
+        await dataService.updateFreePass(
+          this.currentUser,
+          'dessertPass',
           currentWeek
         );
       }
@@ -959,6 +1009,9 @@ class App {
         if (log.cheatMeal) {
           html += '<span class="activity-badge pass">🍔 Cheat meal</span>';
         }
+        if (log.dessertPass) {
+          html += '<span class="activity-badge pass">🍰 Postre libre</span>';
+        }
         if (log.sodaPass) {
           html +=
             '<span class="activity-badge pass">🥤 Bebida permitida</span>';
@@ -1004,6 +1057,7 @@ class App {
     const weeklyBonus = document.getElementById('weeklyBonus');
     const restDay = document.getElementById('restDay');
     const cheatMeal = document.getElementById('cheatMeal');
+    const dessertPass = document.getElementById('dessertPass');
     const sodaPass = document.getElementById('sodaPass');
 
     if (dailyBonus) {
@@ -1022,6 +1076,10 @@ class App {
       cheatMeal.checked = false;
       cheatMeal.disabled = true;
     }
+    if (dessertPass) {
+      dessertPass.checked = false;
+      dessertPass.disabled = true;
+    }
     if (sodaPass) {
       sodaPass.checked = false;
       sodaPass.disabled = true;
@@ -1030,10 +1088,12 @@ class App {
     // Reset pass counters
     const restDayCount = document.getElementById('restDayCount');
     const cheatMealCount = document.getElementById('cheatMealCount');
+    const dessertPassCount = document.getElementById('dessertPassCount');
     const sodaPassCount = document.getElementById('sodaPassCount');
 
     if (restDayCount) restDayCount.textContent = '1 disponible';
     if (cheatMealCount) cheatMealCount.textContent = '1 disponible';
+    if (dessertPassCount) dessertPassCount.textContent = '1 disponible';
     if (sodaPassCount) sodaPassCount.textContent = '1 disponible';
 
     const submitButton = document.getElementById('submitDaily');

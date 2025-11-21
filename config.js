@@ -23,6 +23,7 @@ const AppConfig = {
     penaltyPoints: 3,
     weeklyBonusPoints: 5,
     dailyBonusPoints: 1,
+    penaltyPointsNoReport: 7, // Puntos que se restan automáticamente si no se reporta el día (Cloud Function)
     startDate: '2025-11-17',
     endDate: '2026-03-02',
 

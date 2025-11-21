@@ -540,8 +540,9 @@ class App {
       if (!hasLogged) {
         cheatMeal.checked = false;
       }
+      const remaining = AppConfig.FREE_PASSES.cheatMeal.perWeek - (passes.cheatMealCount || 0);
       console.log(
-        `   Cheat meal: ${passes.cheatMealUsed ? '❌ Usado' : '✅ Disponible'}`
+        `   Cheat meal: ${passes.cheatMealUsed ? '❌ Todos usados' : `✅ ${remaining} disponible${remaining > 1 ? 's' : ''}`}`
       );
     }
     if (sodaPass) {
@@ -562,9 +563,12 @@ class App {
         : '1 disponible';
     }
     if (cheatMealCount) {
+      const used = passes.cheatMealCount || 0;
+      const total = AppConfig.FREE_PASSES.cheatMeal.perWeek;
+      const remaining = total - used;
       cheatMealCount.textContent = passes.cheatMealUsed
-        ? '✅ Usado esta semana'
-        : '1 disponible';
+        ? '✅ Todos usados esta semana'
+        : `${remaining} disponible${remaining > 1 ? 's' : ''}`;
     }
     if (sodaPassCount) {
       sodaPassCount.textContent = passes.sodaPassUsed

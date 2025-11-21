@@ -338,7 +338,7 @@ const AppConfig = {
       name: 'Comida chatarra permitida',
       icon: '🍔',
       affectsActivity: 'healthyFood',
-      perWeek: 1,
+      perWeek: 2,
     },
     sodaPass: {
       name: 'Bebida gasificada/cero permitida',

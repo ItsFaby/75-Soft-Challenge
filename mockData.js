@@ -14,7 +14,7 @@ class MockDataGenerator {
     
     // Generate date string
     getDateString(date) {
-        return date.toISOString().split('T')[0];
+        return formatDateString(date);
     }
     
     // Generate mock daily log for a user
@@ -301,7 +301,7 @@ const MockAPI = {
                         return;
                     }
                     
-                    const dateString = log.date || getCostaRicaDate().toISOString().split('T')[0];
+                    const dateString = log.date || formatDateString(getCostaRicaDate());
                     MOCK_DATABASE.users[userName].dailyLogs[dateString] = log;
                     MOCK_DATABASE.users[userName].points += log.pointsEarned;
                     MOCK_DATABASE.users[userName].lastActive = dateString;

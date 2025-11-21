@@ -111,7 +111,11 @@ const AppConfig = {
       id: 'gratitude',
       day: 11,
     },
-    { text: '🥦 Comer 3 porciones de vegetales', id: 'moreveggies', day: 12 },
+    {
+      text: '🥦 Comer vegetales en todas las comidas',
+      id: 'moreveggies',
+      day: 12,
+    },
     { text: '🌞 Pasar 10 minutos al sol', id: 'sunlight', day: 13 },
 
     {

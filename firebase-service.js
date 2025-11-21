@@ -43,6 +43,8 @@ class FirebaseService {
     collections = {
         users: 'users',
         dailyLogs: 'dailyLogs',
+        challenges: 'challenges',
+        userChallenges: 'userChallenges', // Track which challenges each user has seen/completed
     };
     
     // ===== User Operations =====
@@ -361,6 +363,160 @@ class FirebaseService {
                     callback({ id: doc.id, ...doc.data() });
                 }
             });
+    }
+
+    // ===== Challenge Operations =====
+
+    // Get all challenges
+    async getAllChallenges() {
+        try {
+            const snapshot = await this.db.collection(this.collections.challenges)
+                .orderBy('order', 'asc')
+                .get();
+
+            const challenges = [];
+            snapshot.forEach(doc => {
+                challenges.push({ id: doc.id, ...doc.data() });
+            });
+
+            return challenges;
+        } catch (error) {
+            console.error('Error getting challenges:', error);
+            throw error;
+        }
+    }
+
+    // Get single challenge
+    async getChallenge(challengeId) {
+        try {
+            const doc = await this.db.collection(this.collections.challenges)
+                .doc(challengeId)
+                .get();
+
+            if (doc.exists) {
+                return { id: doc.id, ...doc.data() };
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting challenge:', error);
+            throw error;
+        }
+    }
+
+    // Save/update challenge
+    async saveChallenge(challengeId, challengeData) {
+        try {
+            const challengeRef = this.db.collection(this.collections.challenges).doc(challengeId);
+            await challengeRef.set(challengeData, { merge: true });
+            return { id: challengeId, ...challengeData };
+        } catch (error) {
+            console.error('Error saving challenge:', error);
+            throw error;
+        }
+    }
+
+    // Delete challenge
+    async deleteChallenge(challengeId) {
+        try {
+            await this.db.collection(this.collections.challenges)
+                .doc(challengeId)
+                .delete();
+            return true;
+        } catch (error) {
+            console.error('Error deleting challenge:', error);
+            throw error;
+        }
+    }
+
+    // Get user's challenge tracking data
+    async getUserChallenges(userName) {
+        try {
+            const doc = await this.db.collection(this.collections.userChallenges)
+                .doc(userName)
+                .get();
+
+            if (doc.exists) {
+                return doc.data();
+            }
+
+            // Return default structure if doesn't exist
+            return {
+                completedChallenges: [], // IDs of challenges shown/completed
+                currentChallengeId: null,
+                lastUpdated: null
+            };
+        } catch (error) {
+            console.error('Error getting user challenges:', error);
+            throw error;
+        }
+    }
+
+    // Update user's challenge tracking
+    async updateUserChallenges(userName, data) {
+        try {
+            const userChallengeRef = this.db.collection(this.collections.userChallenges)
+                .doc(userName);
+
+            await userChallengeRef.set({
+                ...data,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            return data;
+        } catch (error) {
+            console.error('Error updating user challenges:', error);
+            throw error;
+        }
+    }
+
+    // Mark challenge as completed for user
+    async markChallengeCompleted(userName, challengeId) {
+        try {
+            const userChallenges = await this.getUserChallenges(userName);
+
+            if (!userChallenges.completedChallenges.includes(challengeId)) {
+                userChallenges.completedChallenges.push(challengeId);
+            }
+
+            await this.updateUserChallenges(userName, userChallenges);
+            return userChallenges;
+        } catch (error) {
+            console.error('Error marking challenge completed:', error);
+            throw error;
+        }
+    }
+
+    // Get random uncompeted challenge for user
+    async getRandomUncompletedChallenge(userName) {
+        try {
+            const allChallenges = await this.getAllChallenges();
+            const userChallenges = await this.getUserChallenges(userName);
+
+            // Filter out completed challenges
+            const availableChallenges = allChallenges.filter(
+                challenge => !userChallenges.completedChallenges.includes(challenge.id)
+            );
+
+            if (availableChallenges.length === 0) {
+                // All challenges completed - reset and start over
+                console.log('All challenges completed for user, resetting...');
+                await this.updateUserChallenges(userName, {
+                    completedChallenges: [],
+                    currentChallengeId: null
+                });
+                return allChallenges[Math.floor(Math.random() * allChallenges.length)];
+            }
+
+            // Return random available challenge
+            const randomChallenge = availableChallenges[
+                Math.floor(Math.random() * availableChallenges.length)
+            ];
+
+            return randomChallenge;
+        } catch (error) {
+            console.error('Error getting random uncompleted challenge:', error);
+            throw error;
+        }
     }
 }
 

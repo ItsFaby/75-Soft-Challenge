@@ -77,6 +77,7 @@ firebase functions:log
 3. Ir a **Functions** → **Logs**
 
 Verás mensajes como:
+
 ```
 🔍 Iniciando verificación de usuarios sin reporte...
 📅 Verificando reportes del día: 2025-11-20
@@ -92,16 +93,19 @@ Verás mensajes como:
 ### Cambiar los puntos de penalización
 
 **En `functions/index.js` línea 83:**
+
 ```javascript
 const PENALTY_POINTS = -7; // Cambiar este número
 ```
 
 **En `config.js` línea 26:**
+
 ```javascript
 penaltyPointsNoReport: 7, // Cambiar este número
 ```
 
 Luego hacer deploy de nuevo:
+
 ```bash
 firebase deploy --only functions
 ```
@@ -109,11 +113,13 @@ firebase deploy --only functions
 ### Cambiar la hora de ejecución
 
 **En `functions/index.js` línea 17:**
+
 ```javascript
 .schedule('0 6 * * *') // 06:00 UTC = 12:00 AM Costa Rica
 ```
 
 **Ejemplos:**
+
 - `0 6 * * *` = 12:00 AM (medianoche)
 - `0 7 * * *` = 01:00 AM
 - `30 5 * * *` = 11:30 PM
@@ -123,6 +129,7 @@ firebase deploy --only functions
 ## 💰 Costos
 
 Firebase Functions tiene **tier gratuito**:
+
 - ✅ 2 millones de invocaciones/mes gratis
 - ✅ Esta función solo se ejecuta 1 vez al día (30-31 veces/mes)
 - ✅ **Probablemente siempre será gratis**
@@ -142,16 +149,19 @@ Después del deploy, en Firebase Console:
 ## 🐛 Problemas Comunes
 
 ### "Firebase CLI not found"
+
 ```bash
 npm install -g firebase-tools
 ```
 
 ### "Permission denied"
+
 ```bash
 firebase login
 ```
 
 ### "Functions did not deploy"
+
 ```bash
 cd functions
 npm install
@@ -175,6 +185,6 @@ Ver documentación completa en: `functions/README.md`
 - [ ] Deploy: `firebase deploy --only functions`
 - [ ] Verificar en Firebase Console que la función está **ACTIVE**
 - [ ] Probar manualmente (opcional)
-- [ ] Ver logs para confirmar que funciona
+- [ ] Ver logs para confirmar que funciona !
 
 🎉 **¡Listo! Tu sistema de penalización automática está configurado.**

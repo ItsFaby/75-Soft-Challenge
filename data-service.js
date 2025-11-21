@@ -586,7 +586,8 @@ class DataService {
     const result = {
       restDayUsed: user.restDaysUsed && user.restDaysUsed[currentWeek] === true,
       cheatMealUsed:
-        user.cheatMealsUsed && user.cheatMealsUsed[currentWeek] === true,
+        user.cheatMealsUsed && (user.cheatMealsUsed[currentWeek] || 0) >= AppConfig.FREE_PASSES.cheatMeal.perWeek,
+      cheatMealCount: user.cheatMealsUsed ? (user.cheatMealsUsed[currentWeek] || 0) : 0,
       sodaPassUsed:
         user.sodaPassesUsed && user.sodaPassesUsed[currentWeek] === true,
       week: currentWeek,
@@ -617,9 +618,9 @@ class DataService {
       );
     } else if (passType === 'cheatMeal') {
       if (!user.cheatMealsUsed) user.cheatMealsUsed = {};
-      user.cheatMealsUsed[week] = true;
+      user.cheatMealsUsed[week] = (user.cheatMealsUsed[week] || 0) + 1;
       console.log(
-        `✅ [TRACKING] Cheat meal marcado como usado en semana ${week}`
+        `✅ [TRACKING] Cheat meal marcado como usado en semana ${week} (total: ${user.cheatMealsUsed[week]})`
       );
     } else if (passType === 'sodaPass') {
       if (!user.sodaPassesUsed) user.sodaPassesUsed = {};

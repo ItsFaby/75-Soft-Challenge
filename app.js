@@ -388,9 +388,12 @@ class App {
     this.updateDateNavigationIndicator();
 
     // Update daily challenge - GLOBAL (same for everyone)
-    // Use the display day of week to show the correct challenge for the selected date
-    const dayIndex = this.getDisplayDayOfWeek();
-    const challenge = AppConfig.DAILY_CHALLENGES[dayIndex];
+    // Use the competition day (1-75) to show the correct challenge
+    const challengeDay = dataService.getDaysSinceChallengeStart();
+    // Array is 0-indexed, so day 1 = index 0
+    const dayIndex = challengeDay - 1;
+    // Make sure we're within bounds (0-74 for 75 days)
+    const challenge = AppConfig.DAILY_CHALLENGES[Math.min(Math.max(dayIndex, 0), 74)];
     const label = document.getElementById('dailyBonusLabel');
     if (label && challenge) {
       label.textContent = challenge.text;

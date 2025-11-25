@@ -243,13 +243,13 @@ class DataService {
   }
 
   getDaysSinceChallengeStart() {
-    const start = new Date(AppConfig.APP_SETTINGS.startDate);
+    const start = new Date(
+      `${AppConfig.APP_SETTINGS.startDate}T00:00:00-06:00`
+    );
+
     const today = this.getCostaRicaDate();
-
     const diffMs = today - start;
-
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
     return diffDays + 1;
   }
 
@@ -643,9 +643,7 @@ class DataService {
     } else if (passType === 'dessertPass') {
       if (!user.dessertPassesUsed) user.dessertPassesUsed = {};
       user.dessertPassesUsed[week] = true;
-      console.log(
-        `✅ [TRACKING] Postre marcado como usado en semana ${week}`
-      );
+      console.log(`✅ [TRACKING] Postre marcado como usado en semana ${week}`);
     } else if (passType === 'sodaPass') {
       if (!user.sodaPassesUsed) user.sodaPassesUsed = {};
       user.sodaPassesUsed[week] = true;

@@ -92,17 +92,17 @@ const AppConfig = {
 
     { text: '🛌 Dormir 7–8 horas', id: 'sleepwell', day: 7 },
     {
-      text: '📵 1 hora sin pantallas antes de dormir',
+      text: '📵 No utilizar ninguna red social (excepto whatsapp)',
       id: 'noscreens',
       day: 8,
     },
     {
-      text: '🧹 Limpiar o ordenar un espacio pequeño',
+      text: 'Eliminar al menos 3 aplicaciones que no necesiten en su celular',
       id: 'declutter',
       day: 9,
     },
     {
-      text: '😌 10 minutos de respiración consciente',
+      text: '😌 Reconectar una persona a la que llevas tiempo sin hablarle',
       id: 'breathing',
       day: 10,
     },
@@ -116,7 +116,11 @@ const AppConfig = {
       id: 'moreveggies',
       day: 12,
     },
-    { text: '🌞 Pasar 10 minutos al sol', id: 'sunlight', day: 13 },
+    {
+      text: '🌞 Pasar 10 minutos al sol admirando el día',
+      id: 'sunlight',
+      day: 13,
+    },
 
     {
       text: '📦 Organizar una carpeta del móvil o computadora',
@@ -128,23 +132,35 @@ const AppConfig = {
       id: 'posture',
       day: 15,
     },
-    { text: '🏃‍♀️ 20 minutos de cardio ligero', id: 'lightcardio', day: 16 },
-    { text: '🎧 Escuchar un audio motivacional', id: 'plan', day: 17 },
     {
-      text: '😁 Sonreír a 3 personas o dar 3 cumplidos',
+      text: '🏃‍♀️ Hacer una caminata y hacer un collage con fotos de un color especifico - Cortesia de Kevin',
+      id: 'lightcardio',
+      day: 16,
+    },
+    {
+      text: 'Ver una pelicula que te saque de tu zona de comfort',
+      id: 'plan',
+      day: 17,
+    },
+    {
+      text: '😁 Sonreír o dar 3 cumplidos a personas que no conozcas',
       id: 'positiveinteractions',
       day: 18,
     },
-    { text: '💭 10 minutos de reflexión personal', id: 'reflection', day: 19 },
     {
-      text: '🚶 Hacer una caminata consciente sin música',
+      text: '💭 Generar una idea de negocio que sea ilicita pero que podria funcionar si las estrellas se alinean',
+      id: 'reflection',
+      day: 19,
+    },
+    {
+      text: 'Dedicarle una canción a alguien',
       id: 'mindfulwalk',
       day: 20,
     },
 
     { text: '⏳ Evitar azúcar procesada por 24h', id: 'nosugar', day: 21 },
     { text: '💨 10 minutos de movilidad articular', id: 'mobility', day: 22 },
-    { text: '📖 Leer 20 minutos de no ficción', id: 'nonfiction', day: 23 },
+    { text: '📖 Escribir un pequeño cuento', id: 'nonfiction', day: 23 },
     {
       text: '🤲 Hacer un acto de servicio pequeño',
       id: 'lemonwater',
@@ -156,7 +172,7 @@ const AppConfig = {
       day: 25,
     },
     {
-      text: '🧠 Practicar visualización 5 minutos',
+      text: '🧠 Resolver un acertijo mental',
       id: 'visualization',
       day: 26,
     },
@@ -168,11 +184,15 @@ const AppConfig = {
       day: 28,
     },
     {
-      text: '🧊 Terminar la ducha con 30s de agua fría',
+      text: '🧊 Terminar la ducha con al menos un minuto de agua fría',
       id: 'coldshower',
       day: 29,
     },
-    { text: '💬 Conectar con un amigo/familiar', id: 'connect', day: 30 },
+    {
+      text: '💬 Contarle un mal chiste a cuantas personas sea necesario hasta lograr que alguien se ria',
+      id: 'connect',
+      day: 30,
+    },
     {
       text: '🧘‍♂️ 15 minutos de meditación guiada',
       id: 'guidedmeditation',
@@ -196,10 +216,10 @@ const AppConfig = {
       id: 'podcastedu',
       day: 36,
     },
-    { text: '🏡 Hacer una limpieza de 10 minutos', id: 'quickclean', day: 37 },
+    { text: 'Hacer un dibujo que te inspire', id: 'quickclean', day: 37 },
     { text: '💫 Evitar quejas por 24h', id: 'nocomplaints', day: 38 },
     {
-      text: '🗂️ Revisar y borrar archivos del móvil',
+      text: '🗂️ Revisar y borrar 100 imagenes del móvil',
       id: 'digitalclean',
       day: 39,
     },
@@ -210,14 +230,22 @@ const AppConfig = {
     },
     { text: '☀️ Ver el amanecer o atardecer', id: 'nosweetdrinks', day: 41 },
 
-    { text: '🧗 Hacer 25 sentadillas', id: 'squats25', day: 42 },
+    {
+      text: '🧗 Ganará el punto quien hace la mayor cantidad de sentadillas durante el día',
+      id: 'squats25',
+      day: 42,
+    },
     {
       text: '👐 20 flexiones contra pared o estándar',
       id: 'pushups20',
       day: 43,
     },
     { text: '🔥 Plancha 1 minuto total', id: 'plank1min', day: 44 },
-    { text: '🦵 30 zancadas (15 por pierna)', id: 'lunges', day: 45 },
+    {
+      text: 'Usar un pantalón que no haya usado hace mucho tiempo',
+      id: 'lunges',
+      day: 45,
+    },
     { text: '📱 2 horas sin redes sociales', id: 'nosocial', day: 46 },
     {
       text: '🎯 Cumplir una pequeña tarea pendiente',
@@ -265,8 +293,16 @@ const AppConfig = {
       day: 57,
     },
     { text: '🧠 Aprender algo nuevo en 10 min', id: 'learn', day: 58 },
-    { text: '🙏 Hacer 5 min de silencio total', id: 'silence', day: 59 },
-    { text: '🔌 1 comida sin teléfono cerca', id: 'phonelessmeal', day: 60 },
+    {
+      text: '🙏 Pedir ayuda para alguna tarea durante el día',
+      id: 'silence',
+      day: 59,
+    },
+    {
+      text: 'Realizar un vision board para lo que deseas lograr este año',
+      id: 'phonelessmeal',
+      day: 60,
+    },
     {
       text: '👣 Caminar 20 min con atención a la respiración',
       id: 'breathwalk',
@@ -274,14 +310,18 @@ const AppConfig = {
     },
     { text: '📚 Leer 10 páginas de ficción', id: 'fiction', day: 62 },
 
-    { text: '🧴 Hacer una mascarilla natural casera', id: 'skincare', day: 63 },
+    {
+      text: '🧴 Utilizar crema hidratante corporal el día de hoy',
+      id: 'skincare',
+      day: 63,
+    },
     {
       text: '🌬️ 10 min de estiramientos de pecho y espalda',
       id: 'backstretch',
       day: 64,
     },
     {
-      text: '🫀 Subir 10 tramos de escaleras durante el día',
+      text: '🫀 Decirle a 5 personas que las quieres',
       id: 'stairs',
       day: 65,
     },

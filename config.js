@@ -32,7 +32,7 @@ const AppConfig = {
     DEV_DAYS_OFFSET: 0, // Change this to advance/rewind days (only works when DEV_MODE is true)
 
     // Allow editing previous days logs (developer only - restricted for participants)
-    ALLOW_EDIT_PREVIOUS_DAYS: true, // Set to true to enable navigation and editing of previous days
+    ALLOW_EDIT_PREVIOUS_DAYS: false, // Set to true to enable navigation and editing of previous days
   },
 
   // Users configuration

@@ -270,7 +270,8 @@ class DataService {
     activities,
     personalChallenge,
     dailyBonus = false,
-    weeklyBonus = false
+    weeklyBonus = false,
+    latePenalty = false
   ) {
     let points = 0;
     const breakdown = [];
@@ -306,6 +307,11 @@ class DataService {
       breakdown.push(
         `Bonus semanal: +${AppConfig.APP_SETTINGS.weeklyBonusPoints}`
       );
+    }
+
+    if (latePenalty) {
+      points -= 3;
+      breakdown.push(`Penalización por registro tardío: -3`);
     }
 
     return { points, breakdown };

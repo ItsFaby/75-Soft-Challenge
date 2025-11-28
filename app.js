@@ -140,6 +140,14 @@ class App {
         });
       });
 
+    // Late penalty checkbox
+    const latePenalty = document.getElementById('latePenalty');
+    if (latePenalty) {
+      latePenalty.addEventListener('change', () => {
+        this.updatePointsPreview();
+      });
+    }
+
     // History filters
     const historyUser = document.getElementById('historyUser');
     const historyPeriod = document.getElementById('historyPeriod');
@@ -426,6 +434,20 @@ class App {
     const displayDate = this.getDisplayDate();
     console.log(displayDate);
 
+    // Show/hide late penalty section based on whether we're editing a previous day
+    const latePenaltySection = document.getElementById('latePenaltySection');
+    const latePenaltyCheckbox = document.getElementById('latePenalty');
+    const today = dataService.getTodayString();
+    const isEditingPreviousDay = displayDate < today;
+
+    if (latePenaltySection) {
+      if (AppConfig.APP_SETTINGS.ALLOW_EDIT_PREVIOUS_DAYS && isEditingPreviousDay) {
+        latePenaltySection.style.display = 'block';
+      } else {
+        latePenaltySection.style.display = 'none';
+      }
+    }
+
     // Check if already logged for the display date
     const hasLogged = await dataService.hasLoggedToday(this.currentUser, displayDate);
     const submitButton = document.getElementById('submitDaily');
@@ -455,6 +477,7 @@ class App {
         const cheatMeal = document.getElementById('cheatMeal');
         const dessertPass = document.getElementById('dessertPass');
         const sodaPass = document.getElementById('sodaPass');
+        const latePenalty = document.getElementById('latePenalty');
 
         if (dailyBonus) {
           dailyBonus.checked = dateLog.dailyBonus;
@@ -475,6 +498,9 @@ class App {
         if (sodaPass) {
           sodaPass.checked = dateLog.sodaPass;
           sodaPass.disabled = false; // Allow editing
+        }
+        if (latePenalty) {
+          latePenalty.checked = dateLog.latePenalty || false;
         }
       }
 
@@ -498,6 +524,7 @@ class App {
       // Reset bonus checkboxes
       const dailyBonus = document.getElementById('dailyBonus');
       const weeklyBonus = document.getElementById('weeklyBonus');
+      const latePenalty = document.getElementById('latePenalty');
 
       if (dailyBonus) {
         dailyBonus.checked = false;
@@ -506,6 +533,9 @@ class App {
       if (weeklyBonus) {
         weeklyBonus.checked = false;
         weeklyBonus.disabled = true; // Will be enabled if week is complete
+      }
+      if (latePenalty) {
+        latePenalty.checked = false;
       }
 
       // Check free passes
@@ -693,11 +723,13 @@ class App {
 
     // Calculate points
     const dailyBonus = document.getElementById('dailyBonus')?.checked || false;
+    const latePenalty = document.getElementById('latePenalty')?.checked || false;
     const result = dataService.calculatePoints(
       activities,
       userData.personalChallenge,
       dailyBonus,
-      false
+      false,
+      latePenalty
     );
 
     // Update indicators
@@ -822,6 +854,7 @@ class App {
     const cheatMeal = document.getElementById('cheatMeal')?.checked || false;
     const dessertPass = document.getElementById('dessertPass')?.checked || false;
     const sodaPass = document.getElementById('sodaPass')?.checked || false;
+    const latePenalty = document.getElementById('latePenalty')?.checked || false;
 
     // Check if today will complete a perfect week (including today's activities)
     const weeklyBonus = await dataService.isWeekCompleteWithToday(
@@ -834,7 +867,8 @@ class App {
       activities,
       userData.personalChallenge,
       dailyBonus,
-      weeklyBonus
+      weeklyBonus,
+      latePenalty
     );
 
     // Create log data
@@ -846,6 +880,7 @@ class App {
       cheatMeal: cheatMeal,
       dessertPass: dessertPass,
       sodaPass: sodaPass,
+      latePenalty: latePenalty,
       pointsEarned: result.points,
       breakdown: result.breakdown,
     };
@@ -1018,6 +1053,10 @@ class App {
         if (log.sodaPass) {
           html +=
             '<span class="activity-badge pass">🥤 Bebida permitida</span>';
+        }
+        if (log.latePenalty) {
+          html +=
+            '<span class="activity-badge penalty">⏰ Registro tardío (-3)</span>';
         }
 
         html += '</td></tr>';

@@ -158,7 +158,7 @@ const AppConfig = {
       day: 20,
     },
 
-    { text: '⏳ Evitar azúcar procesada por 24h', id: 'nosugar', day: 21 },
+    { text: '⏳ Crear su vision board para el 2026', id: 'nosugar', day: 21 },
     { text: '💨 10 minutos de movilidad articular', id: 'mobility', day: 22 },
     { text: '📖 Escribir un pequeño cuento', id: 'nonfiction', day: 23 },
     {
@@ -184,7 +184,7 @@ const AppConfig = {
       day: 28,
     },
     {
-      text: '🧊 Terminar la ducha con al menos un minuto de agua fría',
+      text: '🧊 Tomar una ducha con agua fría (Nada de baños agugu)',
       id: 'coldshower',
       day: 29,
     },

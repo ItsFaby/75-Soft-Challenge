@@ -299,7 +299,7 @@ const AppConfig = {
       day: 59,
     },
     {
-      text: 'Realizar un vision board para lo que deseas lograr este año',
+      text: 'Hacer una coreografia propia y darla toda - Cortesia de Yuli',
       id: 'phonelessmeal',
       day: 60,
     },
